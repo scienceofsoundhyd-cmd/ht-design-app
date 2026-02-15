@@ -1967,7 +1967,7 @@ const visualScreenDepth = 12; // px (do NOT scale)
 const screenX =
   visualRoomWidth / 2 + 20 - visualScreenWidth / 2;
 
-const screenY = 20; // EXACTLY on wall
+const screenY = usableRoom.y;
 
 // ============================================================
 // PHASE 4 — PROJECTOR GEOMETRY (TOP-DOWN)
@@ -4412,6 +4412,28 @@ if (masterVerdict === "Not Recommended") {
       </p>
     </div>
 
+    {/* Configuration Flow Visualization */}
+    <div style={{
+      background: "#020617",
+      border: "1px dashed #334155",
+      borderRadius: "8px",
+      padding: "12px",
+      fontSize: "11px",
+      lineHeight: 1.8,
+      color: "#94A3B8",
+    }}>
+      <div style={{ fontWeight: 600, marginBottom: "6px", color: "#E2E8F0" }}>
+        Configuration Flow:
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+        <div>1. Room Dimensions → Base space</div>
+        <div>2. Acoustic Mode → Reduces usable volume</div>
+        <div>3. Speaker Layout → Sets front obstruction</div>
+        <div>4. Screen Size → Determines viewing distance</div>
+        <div>5. Seating → Fills remaining depth</div>
+      </div>
+    </div>
+
 {/* ============================================================ */}
 {/* CARD 1 — ROOM DIMENSIONS */}
 {/* ============================================================ */}
@@ -4426,7 +4448,14 @@ if (masterVerdict === "Not Recommended") {
     gap: "14px",
   }}
 >
-  <strong>Room Dimensions</strong>
+  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <strong>Room Dimensions</strong>
+    {hasValidDimensions ? (
+      <span style={{ fontSize: "11px", color: "#22C55E" }}>✓ Complete</span>
+    ) : (
+      <span style={{ fontSize: "11px", color: "#94A3B8" }}>⚬ Pending</span>
+    )}
+  </div>
 
   {/* ---------- LENGTH ---------- */}
   <div>
@@ -4437,6 +4466,7 @@ if (masterVerdict === "Not Recommended") {
       <input
         type="number"
         placeholder="ft"
+        min={0}
         value={typeof length === "number" ? Math.floor(length) : ""}
         onChange={(e) => {
           const ft = Number(e.target.value);
@@ -4485,6 +4515,7 @@ if (masterVerdict === "Not Recommended") {
       <input
         type="number"
         placeholder="ft"
+        min={0}
         value={typeof width === "number" ? Math.floor(width) : ""}
         onChange={(e) => {
           const ft = Number(e.target.value);
@@ -4534,6 +4565,7 @@ if (masterVerdict === "Not Recommended") {
       <input
         type="number"
         placeholder="ft"
+        min={0}
         value={typeof height === "number" ? Math.floor(height) : ""}
         onChange={(e) => {
           const ft = Number(e.target.value);
@@ -4587,7 +4619,16 @@ if (masterVerdict === "Not Recommended") {
     gap: "12px",
   }}
 >
-  <strong>Acoustic Mode</strong>
+  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <strong>Acoustic Mode</strong>
+    {!isAcousticUnlocked ? (
+      <span style={{ fontSize: "11px", color: "#94A3B8" }}>🔒 Locked</span>
+    ) : effectiveAcousticMode ? (
+      <span style={{ fontSize: "11px", color: "#22C55E" }}>✓ {effectiveAcousticMode}</span>
+    ) : (
+      <span style={{ fontSize: "11px", color: "#FACC15" }}>⚠ Select mode</span>
+    )}
+  </div>
 
   {/* Auto Recommendation */}
   {recommendedAcousticMode && (
@@ -4648,6 +4689,46 @@ if (masterVerdict === "Not Recommended") {
     </select>
   </div>
 
+  {/* Design Intent */}
+  <div>
+    <label style={{ fontSize: "12px", opacity: 0.6 }}>
+      Design Intent
+    </label>
+
+    <select
+      value={designIntent}
+      onChange={(e) =>
+        setDesignIntent(
+          e.target.value as
+            | "Performance"
+            | "Balanced"
+            | "Luxury"
+        )
+      }
+      disabled={!isAcousticUnlocked}
+      style={{
+        width: "100%",
+        background: isAcousticUnlocked ? "#0F172A" : "#020617",
+        border: "1px solid #334155",
+        borderRadius: "6px",
+        padding: "8px",
+        color: "white",
+        marginTop: "4px",
+        opacity: isAcousticUnlocked ? 1 : 0.5,
+      }}
+    >
+      <option value="Performance">
+        Performance — Accuracy & control
+      </option>
+      <option value="Balanced">
+        Balanced — Performance + aesthetics
+      </option>
+      <option value="Luxury">
+        Luxury — Visual & experiential focus
+      </option>
+    </select>
+  </div>
+
  {/* ============================================================ */}
 {/* Acoustic Treatment Depth — Per Surface */}
 {/* ============================================================ */}
@@ -4655,6 +4736,84 @@ if (masterVerdict === "Not Recommended") {
   <label style={{ fontSize: "12px", opacity: 0.6 }}>
     Acoustic Treatment Depth (inches)
   </label>
+
+  {/* Quick Presets */}
+  <div style={{ marginTop: "8px", marginBottom: "12px" }}>
+    <div style={{ fontSize: "11px", opacity: 0.6, marginBottom: "6px" }}>
+      Quick Presets:
+    </div>
+    <div style={{ display: "flex", gap: "6px" }}>
+      <button
+        onClick={() => {
+          if (!isAcousticUnlocked) return;
+          setFrontWallDepthIn(4);
+          setBackWallDepthIn(4);
+          setLeftWallDepthIn(4);
+          setRightWallDepthIn(4);
+        }}
+        disabled={!isAcousticUnlocked}
+        style={{
+          flex: 1,
+          padding: "6px 10px",
+          fontSize: "11px",
+          background: "#0F172A",
+          border: "1px solid #334155",
+          borderRadius: "6px",
+          color: "white",
+          cursor: isAcousticUnlocked ? "pointer" : "not-allowed",
+          opacity: isAcousticUnlocked ? 1 : 0.5,
+        }}
+      >
+        Light (4″)
+      </button>
+      <button
+        onClick={() => {
+          if (!isAcousticUnlocked) return;
+          setFrontWallDepthIn(8);
+          setBackWallDepthIn(8);
+          setLeftWallDepthIn(8);
+          setRightWallDepthIn(8);
+        }}
+        disabled={!isAcousticUnlocked}
+        style={{
+          flex: 1,
+          padding: "6px 10px",
+          fontSize: "11px",
+          background: "#0F172A",
+          border: "1px solid #334155",
+          borderRadius: "6px",
+          color: "white",
+          cursor: isAcousticUnlocked ? "pointer" : "not-allowed",
+          opacity: isAcousticUnlocked ? 1 : 0.5,
+        }}
+      >
+        Medium (8″)
+      </button>
+      <button
+        onClick={() => {
+          if (!isAcousticUnlocked) return;
+          setFrontWallDepthIn(12);
+          setBackWallDepthIn(12);
+          setLeftWallDepthIn(12);
+          setRightWallDepthIn(12);
+        }}
+        disabled={!isAcousticUnlocked}
+        style={{
+          flex: 1,
+          padding: "6px 10px",
+          fontSize: "11px",
+          background: "#0F172A",
+          border: "1px solid #334155",
+          borderRadius: "6px",
+          color: "white",
+          cursor: isAcousticUnlocked ? "pointer" : "not-allowed",
+          opacity: isAcousticUnlocked ? 1 : 0.5,
+        }}
+      >
+        Heavy (12″)
+      </button>
+    </div>
+  </div>
 
   {/* ---------- FRONT WALL ---------- */}
   <div style={{ marginTop: "8px" }}>
@@ -4786,46 +4945,6 @@ if (masterVerdict === "Not Recommended") {
   </div>
 </div>
 
-  {/* Design Intent */}
-  <div>
-    <label style={{ fontSize: "12px", opacity: 0.6 }}>
-      Design Intent
-    </label>
-
-    <select
-      value={designIntent}
-      onChange={(e) =>
-        setDesignIntent(
-          e.target.value as
-            | "Performance"
-            | "Balanced"
-            | "Luxury"
-        )
-      }
-      disabled={!isAcousticUnlocked}
-      style={{
-        width: "100%",
-        background: isAcousticUnlocked ? "#0F172A" : "#020617",
-        border: "1px solid #334155",
-        borderRadius: "6px",
-        padding: "8px",
-        color: "white",
-        marginTop: "4px",
-        opacity: isAcousticUnlocked ? 1 : 0.5,
-      }}
-    >
-      <option value="Performance">
-        Performance — Accuracy & control
-      </option>
-      <option value="Balanced">
-        Balanced — Performance + aesthetics
-      </option>
-      <option value="Luxury">
-        Luxury — Visual & experiential focus
-      </option>
-    </select>
-  </div>
-
   {/* Explanation */}
   <div
     style={{
@@ -4871,7 +4990,16 @@ if (masterVerdict === "Not Recommended") {
       ...LP_CARD_ANIMATION_STYLE,
     }}
   >
-    <strong>Speaker Layout</strong>
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <strong>Speaker Layout</strong>
+      {!isSpeakerUnlocked ? (
+        <span style={{ fontSize: "11px", color: "#94A3B8" }}>🔒 Locked</span>
+      ) : speakerLayoutChoice ? (
+        <span style={{ fontSize: "11px", color: "#22C55E" }}>✓ {speakerLayoutLabel}</span>
+      ) : (
+        <span style={{ fontSize: "11px", color: "#FACC15" }}>⚠ Select layout</span>
+      )}
+    </div>
 
     <p style={{ fontSize: "12px", opacity: 0.6 }}>
       Dolby / DTS / Auro-3D / Extreme configurations
@@ -5024,113 +5152,119 @@ if (masterVerdict === "Not Recommended") {
       Manual selections outside recommended limits will trigger warnings in the
       summary.
     </p>
+
+    {/* ============================================================
+       SPEAKER MOUNTING & PLACEMENT
+       ============================================================ */}
+
+    <div style={{ marginTop: "14px" }}>
+      <strong style={{ fontSize: "13px" }}>
+        Speaker Mounting
+      </strong>
+
+      <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+        <button
+          onClick={() => setSpeakerMountType("InWall")}
+          disabled={!hasValidDimensions}
+          style={{
+            flex: 1,
+            padding: "8px",
+            background:
+              speakerMountType === "InWall"
+                ? "#1E40AF"
+                : "#020617",
+            border: "1px solid #334155",
+            borderRadius: "6px",
+            color: "white",
+            cursor: hasValidDimensions ? "pointer" : "not-allowed",
+            opacity: hasValidDimensions ? 1 : 0.5,
+          }}
+        >
+          In-Wall
+        </button>
+
+        <button
+          onClick={() => setSpeakerMountType("OnWall")}
+          disabled={!hasValidDimensions}
+          style={{
+            flex: 1,
+            padding: "8px",
+            background:
+              speakerMountType === "OnWall"
+                ? "#1E40AF"
+                : "#020617",
+            border: "1px solid #334155",
+            borderRadius: "6px",
+            color: "white",
+            cursor: hasValidDimensions ? "pointer" : "not-allowed",
+            opacity: hasValidDimensions ? 1 : 0.5,
+          }}
+        >
+          On-Wall
+        </button>
+      </div>
+
+      <p style={{ fontSize: "11px", color: "#94A3B8", marginTop: "6px" }}>
+        {speakerMountExplanation}
+      </p>
+    </div>
+
+    {/* ---------- Placement Mode ---------- */}
+    <div style={{ marginTop: "12px" }}>
+      <strong style={{ fontSize: "13px" }}>
+        Speaker Placement
+      </strong>
+
+      <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+        <button
+          disabled={!behindScreenAllowed || !hasValidDimensions}
+          onClick={() => setSpeakerPlacementMode("BehindScreen")}
+          style={{
+            flex: 1,
+            padding: "8px",
+            background:
+              speakerPlacementMode === "BehindScreen"
+                ? "#1E40AF"
+                : "#020617",
+            border: "1px solid #334155",
+            borderRadius: "6px",
+            color: (behindScreenAllowed && hasValidDimensions) ? "white" : "#64748B",
+            opacity: (behindScreenAllowed && hasValidDimensions) ? 1 : 0.4,
+            cursor: (behindScreenAllowed && hasValidDimensions) ? "pointer" : "not-allowed",
+          }}
+        >
+          Behind Screen
+        </button>
+
+        <button
+          onClick={() => setSpeakerPlacementMode("BesideScreen")}
+          disabled={!hasValidDimensions}
+          style={{
+            flex: 1,
+            padding: "8px",
+            background:
+              speakerPlacementMode === "BesideScreen"
+                ? "#1E40AF"
+                : "#020617",
+            border: "1px solid #334155",
+            borderRadius: "6px",
+            color: "white",
+            cursor: hasValidDimensions ? "pointer" : "not-allowed",
+            opacity: hasValidDimensions ? 1 : 0.5,
+          }}
+        >
+          Beside Screen
+        </button>
+      </div>
+
+      <p style={{ fontSize: "11px", color: "#94A3B8", marginTop: "6px" }}>
+        {speakerPlacementExplanation}
+      </p>
+    </div>
   </div>
 ) : (
   <LockedCardShell title="Speaker Layout" />
 )}
-
-{/* ============================================================
-   PHASE 3B — SPEAKER MOUNTING & PLACEMENT
-   ============================================================ */}
-
-<div style={{ marginTop: "14px" }}>
-  <strong style={{ fontSize: "13px" }}>
-    Speaker Mounting
-  </strong>
-
-  <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-    <button
-      onClick={() => setSpeakerMountType("InWall")}
-      style={{
-        flex: 1,
-        padding: "8px",
-        background:
-          speakerMountType === "InWall"
-            ? "#1E40AF"
-            : "#020617",
-        border: "1px solid #334155",
-        borderRadius: "6px",
-        color: "white",
-        cursor: "pointer",
-      }}
-    >
-      In-Wall
-    </button>
-
-    <button
-      onClick={() => setSpeakerMountType("OnWall")}
-      style={{
-        flex: 1,
-        padding: "8px",
-        background:
-          speakerMountType === "OnWall"
-            ? "#1E40AF"
-            : "#020617",
-        border: "1px solid #334155",
-        borderRadius: "6px",
-        color: "white",
-        cursor: "pointer",
-      }}
-    >
-      On-Wall
-    </button>
-  </div>
-
-  <p style={{ fontSize: "11px", color: "#94A3B8", marginTop: "6px" }}>
-    {speakerMountExplanation}
-  </p>
-</div>
-
-{/* ---------- Placement Mode ---------- */}
-<div style={{ marginTop: "12px" }}>
-  <strong style={{ fontSize: "13px" }}>
-    Speaker Placement
-  </strong>
-
-  <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-    <button
-      disabled={!behindScreenAllowed}
-      onClick={() => setSpeakerPlacementMode("BehindScreen")}
-      style={{
-        flex: 1,
-        padding: "8px",
-        background:
-          speakerPlacementMode === "BehindScreen"
-            ? "#1E40AF"
-            : "#020617",
-        border: "1px solid #334155",
-        borderRadius: "6px",
-        color: behindScreenAllowed ? "white" : "#64748B",
-        opacity: behindScreenAllowed ? 1 : 0.4,
-        cursor: behindScreenAllowed ? "pointer" : "not-allowed",
-      }}
-    >
-      Behind Screen
-    </button>
-
-    <button
-      onClick={() => setSpeakerPlacementMode("BesideScreen")}
-      style={{
-        flex: 1,
-        padding: "8px",
-        background:
-          speakerPlacementMode === "BesideScreen"
-            ? "#1E40AF"
-            : "#020617",
-        border: "1px solid #334155",
-        borderRadius: "6px",
-        color: "white",
-        cursor: "pointer",
-      }}
-    >
-      Beside Screen
-    </button>
-  </div>
-
-  <p style={{ fontSize: "11px", color: "#94A3B8", marginTop: "6px" }}>
-    {speakerPlacementExplanation}
-  </p>
-</div>
 
 {/* ============================================================ */}
 {/* CARD 4 — Screen Preferences */}
@@ -5155,7 +5289,16 @@ if (masterVerdict === "Not Recommended") {
   </p>
 )}
 
-  <strong>Screen Preferences</strong>
+  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <strong>Screen Preferences</strong>
+    {!isScreenUnlocked ? (
+      <span style={{ fontSize: "11px", color: "#94A3B8" }}>🔒 Locked</span>
+    ) : typeof finalScreenDiagonalIn === "number" ? (
+      <span style={{ fontSize: "11px", color: "#22C55E" }}>✓ {Math.round(finalScreenDiagonalIn)}″</span>
+    ) : (
+      <span style={{ fontSize: "11px", color: "#FACC15" }}>⚠ Select size</span>
+    )}
+  </div>
 
   {hasValidDimensions && (
     <p style={{ fontSize: "12px", opacity: 0.7 }}>
@@ -5183,6 +5326,38 @@ if (masterVerdict === "Not Recommended") {
         Selected screen deviates from optimal viewing comfort
       </p>
     )}
+
+  {/* Viewing Standard */}
+  <div>
+    <label style={{ fontSize: "12px", opacity: 0.6 }}>
+      Viewing Standard
+    </label>
+    <select
+      value={viewingAngle}
+      onChange={(e) => {
+        if (!isScreenUnlocked) return;
+        setViewingAngle(e.target.value as "smpte" | "thx" | "max");
+      }}
+      style={{
+        width: "100%",
+        background: "#0F172A",
+        border: "1px solid #334155",
+        borderRadius: "6px",
+        padding: "8px",
+        color: "white",
+        marginTop: "4px",
+      }}
+    >
+      <option value="smpte">SMPTE (30° - Conservative)</option>
+      <option value="thx">THX (40° - Reference)</option>
+      <option value="max">Max Immersion (50°+ - Intense)</option>
+    </select>
+    <p style={{ fontSize: "11px", color: "#94A3B8", marginTop: "4px" }}>
+      {viewingAngle === "smpte" && "Industry standard for comfortable long viewing sessions"}
+      {viewingAngle === "thx" && "Reference cinema standard, balance of immersion and comfort"}
+      {viewingAngle === "max" && "Maximum immersion, best for dedicated cinema rooms"}
+    </p>
+  </div>
 
   {/* Aspect Ratio */}
   <div>
@@ -5308,7 +5483,16 @@ if (masterVerdict === "Not Recommended") {
     ...(isSeatingUnlocked ? LP_CARD_ANIMATION_STYLE : LP_LOCKED_STYLE),
   }}
 >
-  <strong>Seating & Rows</strong>
+  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <strong>Seating & Rows</strong>
+    {!isSeatingUnlocked ? (
+      <span style={{ fontSize: "11px", color: "#94A3B8" }}>🔒 Locked</span>
+    ) : rowCount > 0 ? (
+      <span style={{ fontSize: "11px", color: "#22C55E" }}>✓ {rowCount} row{rowCount > 1 ? "s" : ""}</span>
+    ) : (
+      <span style={{ fontSize: "11px", color: "#FACC15" }}>⚠ Configure</span>
+    )}
+  </div>
 
   {/* ---------- Derived limits ---------- */}
   {(() => {
@@ -5317,12 +5501,14 @@ if (masterVerdict === "Not Recommended") {
         ? usableRoomLengthFt
         : 0;
 
-    const usableWidth =
-      typeof usableRoomRight === "number"
-        ? usableRoomRight
-        : 0;
-
-    const MAX_ROWS_BY_LENGTH = Math.floor(usableLengthFt / 5.5);
+    // Front and rear clearance (1 ft each = 2 ft total)
+    const CLEARANCE_FT = 2;
+    
+    // Seat depth = 70" = 5.83 ft
+    const availableLengthForSeating = usableLengthFt - CLEARANCE_FT;
+    
+    // Maximum rows that can physically fit
+    const MAX_ROWS_BY_LENGTH = Math.floor(availableLengthForSeating / seatDepthFt);
 
     const maxRows = Math.max(1, Math.min(6, MAX_ROWS_BY_LENGTH));
     const minRiserIn = rowCount > 1 ? 6 : 0;
@@ -5335,6 +5521,31 @@ if (masterVerdict === "Not Recommended") {
           <label style={{ fontSize: "12px", opacity: 0.6 }}>
             Number of Rows
           </label>
+
+          {/* Auto-Suggestion */}
+          {(() => {
+            // Calculate recommended rows based on viewing distance and available depth
+            const recommendedRows = typeof viewingDistance === "number" && usableLengthFt > 0
+              ? Math.min(maxRows, Math.max(1, Math.floor((usableLengthFt - viewingDistance - 2) / seatDepthFt)))
+              : 1;
+            
+            return recommendedRows > 0 && recommendedRows <= maxRows ? (
+              <div style={{
+                fontSize: "11px",
+                color: "#22C55E",
+                background: "#052E1A",
+                padding: "6px 8px",
+                borderRadius: "4px",
+                marginTop: "4px",
+                border: "1px solid #14532D",
+              }}>
+                💡 Recommended: {recommendedRows} row{recommendedRows > 1 ? "s" : ""}
+                <span style={{ color: "#94A3B8", marginLeft: "4px" }}>
+                  (Based on optimal viewing distance)
+                </span>
+              </div>
+            ) : null;
+          })()}
 
           <select
             value={rowCount}
@@ -5376,14 +5587,13 @@ if (masterVerdict === "Not Recommended") {
     // Mandatory 1" clearance each side = 2" total
     const SIDE_CLEARANCE_FT = 2 / 12;
 
-    const usablewidth =
-      typeof usableWidth === "number"
-        ? usableWidth
-        : 0;
+    // usableRoom.width is in pixels, convert to feet
+    const usableWidthPx = usableRoom.width;
+    const usableWidthFt = usableWidthPx / VISUAL_SCALE;
 
     const maxSeats =
       Math.floor(
-        (usablewidth - SIDE_CLEARANCE_FT) / SEAT_WIDTH_FT
+        (usableWidthFt - SIDE_CLEARANCE_FT) / SEAT_WIDTH_FT
       ) || 1;
 
     const safeMax = Math.max(1, Math.min(8, maxSeats));
@@ -5474,122 +5684,6 @@ if (masterVerdict === "Not Recommended") {
 </div>
 
 {/* ============================================================ */}
-{/* CARD 6 — Misc / Combined Preferences */}
-{/* ============================================================ */}
-<div
-  style={{
-    background: "#020617",
-    border: "1px solid #1F2937",
-    borderRadius: "8px",
-    padding: "16px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-    ...(isMiscUnlocked ? LP_CARD_ANIMATION_STYLE : LP_LOCKED_STYLE),
-  }}
->
-  <strong>Misc / Combined Preferences</strong>
-
-  {/* Info */}
-  <p style={{ fontSize: "12px", opacity: 0.65 }}>
-    These preferences fine-tune recommendations only.
-    They do <strong>not</strong> change room geometry or layout math.
-  </p>
-
-  {/* Calibration Priority */}
-  <div>
-    <label style={{ fontSize: "12px", opacity: 0.6 }}>
-      Calibration Priority
-    </label>
-
-    <select
-      value={calibrationPriority}
-      onChange={(e) => {
-        if (!isMiscUnlocked) return;
-        setCalibrationPriority(
-          e.target.value as
-            | "Standard"
-            | "Reference"
-            | "Studio"
-        );
-      }}
-      style={{
-        width: "100%",
-        background: "#0F172A",
-        border: "1px solid #334155",
-        borderRadius: "6px",
-        padding: "8px",
-        color: "white",
-        marginTop: "4px",
-      }}
-    >
-      <option value="Standard">
-        Standard — Cinema tuned
-      </option>
-      <option value="Reference">
-        Reference — THX / Dolby aligned
-      </option>
-      <option value="Studio">
-        Studio — Flat & analytical
-      </option>
-    </select>
-  </div>
-
-  {/* Listening Preference */}
-  <div>
-    <label style={{ fontSize: "12px", opacity: 0.6 }}>
-      Listening Preference
-    </label>
-
-    <select
-      value={listeningPreference}
-      onChange={(e) => {
-        if (!isMiscUnlocked) return;
-        setListeningPreference(
-          e.target.value as
-            | "Balanced"
-            | "DialogueFocused"
-            | "ImpactFocused"
-        );
-      }}
-      style={{
-        width: "100%",
-        background: "#0F172A",
-        border: "1px solid #334155",
-        borderRadius: "6px",
-        padding: "8px",
-        color: "white",
-        marginTop: "4px",
-      }}
-    >
-      <option value="Balanced">
-        Balanced — Neutral presentation
-      </option>
-      <option value="DialogueFocused">
-        Dialogue Focused — Clear vocals
-      </option>
-      <option value="ImpactFocused">
-        Impact Focused — Energy & punch
-      </option>
-    </select>
-  </div>
-
-  {/* Note */}
-  <div
-    style={{
-      fontSize: "11px",
-      color: "#94A3B8",
-      lineHeight: 1.5,
-    }}
-  >
-    These settings influence:
-    <ul style={{ marginTop: "4px", paddingLeft: "16px" }}>
-      <li>Recommendation confidence</li>
-      <li>Warning strictness</li>
-      <li>Client-facing language</li>
-    </ul>
-  </div>
-</div>
 
   {/* ================= END LEFT PANEL ================= */}
 

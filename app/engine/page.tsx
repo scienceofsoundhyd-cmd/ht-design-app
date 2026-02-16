@@ -3,12 +3,47 @@ import { useState, useRef, useEffect } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-export default function Engine() {
+export default function HomeTheaterCalculator() {
+
+// ============================================================
+// DESIGN CONSTANTS
+// ============================================================
+const DESIGN_CONSTANTS = {
+  // Room limits
+  MAX_LENGTH: 60,
+  MAX_WIDTH: 40,
+  MAX_HEIGHT: 20,
+  
+  // Seat dimensions (inches)
+  SEAT_WIDTH_IN: 36,
+  SEAT_DEPTH_RECLINE_IN: 70,
+  SEAT_HEIGHT_IN: 44,
+  
+  // Acoustic depths (inches)
+  CEILING_ACOUSTIC_DEPTH_IN: 12,
+  DEFAULT_WALL_DEPTH_IN: 4,
+  
+  // Obstruction depths (inches)
+  IN_WALL_OBSTRUCTION_IN: 10,
+  ON_WALL_OBSTRUCTION_IN: 6,
+  
+  // Visual scale
+  VISUAL_SCALE: 20, // 1 ft = 20 px
+  
+  // Default values
+  DEFAULT_RISER_HEIGHT_IN: 6,
+  DEFAULT_ROW_COUNT: 1,
+} as const;
+
+// ============================================================
+// APPLY BUTTON STATE
+// ============================================================
+const [showResults, setShowResults] = useState<boolean>(false);
 
 // SEATING STATES
-const [rowCount, setRowCount] = useState<number>(1);
+const [rowCount, setRowCount] = useState<number>(DESIGN_CONSTANTS.DEFAULT_ROW_COUNT);
 const [seatsPerRow, setSeatsPerRow] = useState<number>(3);
-const [selectedRiserHeightIn, setSelectedRiserHeightIn] = useState<number>(6);
+const [selectedRiserHeightIn, setSelectedRiserHeightIn] = useState<number>(DESIGN_CONSTANTS.DEFAULT_RISER_HEIGHT_IN);
 const [aisleType, setAisleType] =
   useState<"None" | "Left" | "Right" | "Both" | "Center">("None");
 
@@ -16,7 +51,7 @@ const [aisleType, setAisleType] =
 // GLOBAL VISUAL SCALE (AUTHORITATIVE — SINGLE SOURCE)
 // ============================================================
 
-const VISUAL_SCALE = 20;              // 1 ft = 20 px
+const VISUAL_SCALE = DESIGN_CONSTANTS.VISUAL_SCALE;
 const inchToPx = VISUAL_SCALE / 12;   // inch → px conversion
 
 // ============================================================
@@ -24,9 +59,9 @@ const inchToPx = VISUAL_SCALE / 12;   // inch → px conversion
 // ============================================================
 
 // Physical dimensions (inches)
-const SEAT_WIDTH_IN = 36;
-const SEAT_DEPTH_RECLINE_IN = 70;
-const SEAT_HEIGHT_IN = 44;
+const SEAT_WIDTH_IN = DESIGN_CONSTANTS.SEAT_WIDTH_IN;
+const SEAT_DEPTH_RECLINE_IN = DESIGN_CONSTANTS.SEAT_DEPTH_RECLINE_IN;
+const SEAT_HEIGHT_IN = DESIGN_CONSTANTS.SEAT_HEIGHT_IN;
 
 // Convert to feet
 const seatWidthFt = SEAT_WIDTH_IN / 12;
@@ -35,14 +70,6 @@ const seatDepthFt = SEAT_DEPTH_RECLINE_IN / 12;
 // Convert to pixels (visual layer)
 const seatWidthPx = seatWidthFt * VISUAL_SCALE;
 const seatDepthPx = seatDepthFt * VISUAL_SCALE;
-
-// ============================================================
-// GLOBAL VISUAL SCALE (AUTHORITATIVE — MUST BE FIRST)
-// ============================================================
-
-console.log("LEFT");
-console.log("CENTER");
-console.log("RIGHT");
 
 // ============================================================
 // MISC / COMBINED PREFERENCES — STATE
@@ -56,16 +83,8 @@ const [width, setWidth] = useState<number | null>(null);
 const [height, setHeight] = useState<number | null>(null);
 
 // ============================================================
-// PHASE 9.1 — SAFE DIMENSION GUARDS (READ-ONLY HELPERS)
+// ROOM DIMENSION VALIDATION (SINGLE SOURCE OF TRUTH)
 // ============================================================
-const hasAllRoomDimensions =
-  typeof length === "number" &&
-  typeof width === "number" &&
-  typeof height === "number";
-
-const safeLength = typeof length === "number" ? length : 0;
-const safeWidth = typeof width === "number" ? width : 0;
-const safeHeight = typeof height === "number" ? height : 0;
 const hasValidDimensions =
   typeof length === "number" &&
   typeof width === "number" &&
@@ -74,17 +93,31 @@ const hasValidDimensions =
   width > 0 &&
   height > 0;
 
+// Safe fallback values for calculations
+const safeLength = typeof length === "number" ? length : 0;
+const safeWidth = typeof width === "number" ? width : 0;
+const safeHeight = typeof height === "number" ? height : 0;
+
+// ============================================================
+// APPLY BUTTON HANDLER
+// ============================================================
+const handleApplyChanges = () => {
+  if (hasValidDimensions) {
+    setShowResults(true);
+  }
+};
+
 /* ============================================================
    LP-2 — ROOM DIMENSIONS HARD GATE & RESET CASCADE
    ============================================================ */
 useEffect(() => {
   // If room dimensions are NOT valid, reset ALL downstream state
   if (!hasValidDimensions) {
-// --- Acoustic wall depths ---
-setFrontWallDepthIn(4);
-setBackWallDepthIn(4);
-setLeftWallDepthIn(4);
-setRightWallDepthIn(4);
+    // --- Acoustic wall depths ---
+    setFrontWallDepthIn(DESIGN_CONSTANTS.DEFAULT_WALL_DEPTH_IN);
+    setBackWallDepthIn(DESIGN_CONSTANTS.DEFAULT_WALL_DEPTH_IN);
+    setLeftWallDepthIn(DESIGN_CONSTANTS.DEFAULT_WALL_DEPTH_IN);
+    setRightWallDepthIn(DESIGN_CONSTANTS.DEFAULT_WALL_DEPTH_IN);
 
     // --- Acoustic ---
     setAcousticMode("Medium");
@@ -96,24 +129,30 @@ setRightWallDepthIn(4);
     setSelectedScreenSize("Auto");
 
     // --- Seating ---
-    setRowCount(1);
-    setSelectedRiserHeightIn(0);
+    setRowCount(DESIGN_CONSTANTS.DEFAULT_ROW_COUNT);
+    setSelectedRiserHeightIn(DESIGN_CONSTANTS.DEFAULT_RISER_HEIGHT_IN);
 
     // --- View & Visualization ---
     setCenterViewMode("speakers");
     setShowSoundVisualization(true);
   }
 }, [hasValidDimensions]);
+// ============================================================
+// DIMENSION ERROR STATE
+// ============================================================
+const [dimensionError, setDimensionError] = useState<string>("");
+
 useEffect(() => {
   if (
     typeof length === "number" &&
     typeof width === "number" &&
-    typeof height === "number" &&
-    (length > 60 || width > 40 || height > 20)
+    typeof height === "number"
   ) {
-    alert(
-      "Room size exceeds supported limits. Please contact us for more information."
-    );
+    if (length > 60 || width > 40 || height > 20) {
+      setDimensionError("Room size exceeds supported limits (Max: 60' L × 40' W × 20' H). Please contact us for assistance.");
+    } else {
+      setDimensionError("");
+    }
   }
 }, [length, width, height]);
 
@@ -123,29 +162,21 @@ const [viewingAngle, setViewingAngle] =
 // =====================
 // LEFT PANEL LOCKED STYLE (READ-ONLY)
 // =====================
-const LP_LOCKED_STYLE: React.CSSProperties = {
+const LEFT_PANEL_LOCKED_STYLE: React.CSSProperties = {
   opacity: 0.55,
   pointerEvents: "auto",
 };
 
   // ---------- PHASE A1 : Room dimension limits ----------
-const MAX_LENGTH = 60;
-const MAX_WIDTH = 40;
-const MAX_HEIGHT = 20;
-
-const dimensionsEntered =
-  typeof length === "number" &&
-  typeof width === "number" &&
-  typeof height === "number" &&
-  length > 0 &&
-  width > 0 &&
-  height > 0;
+const MAX_LENGTH = DESIGN_CONSTANTS.MAX_LENGTH;
+const MAX_WIDTH = DESIGN_CONSTANTS.MAX_WIDTH;
+const MAX_HEIGHT = DESIGN_CONSTANTS.MAX_HEIGHT;
 
 const dimensionsWithinLimits =
-  dimensionsEntered &&
-  length <= MAX_LENGTH &&
-  width <= MAX_WIDTH &&
-  height <= MAX_HEIGHT;
+  hasValidDimensions &&
+  length! <= MAX_LENGTH &&
+  width! <= MAX_WIDTH &&
+  height! <= MAX_HEIGHT;
 
 // ============================================================
 // PHASE 1A — SPEAKER LAYOUT CHOICE
@@ -168,10 +199,10 @@ useEffect(() => {
     setSpeakerPlacementMode("BesideScreen");
   }
 
-// Downstream reset
-setSelectedScreenSize("Auto");
-setRowCount(1);
-setSelectedRiserHeightIn(0);
+  // Downstream reset
+  setSelectedScreenSize("Auto");
+  setRowCount(DESIGN_CONSTANTS.DEFAULT_ROW_COUNT);
+  setSelectedRiserHeightIn(DESIGN_CONSTANTS.DEFAULT_RISER_HEIGHT_IN);
 }, [speakerMountType]);
 
 // ============================================================
@@ -212,9 +243,9 @@ let frontObstructionDepthIn = 0;
 // In-wall speakers + AT screen → deeper baffle
 // On-wall speakers → shallower obstruction
 if (speakerMountType === "InWall") {
-  frontObstructionDepthIn = 10;
+  frontObstructionDepthIn = DESIGN_CONSTANTS.IN_WALL_OBSTRUCTION_IN;
 } else {
-  frontObstructionDepthIn = 6;
+  frontObstructionDepthIn = DESIGN_CONSTANTS.ON_WALL_OBSTRUCTION_IN;
 }
 
 // PX conversion (AFTER inchToPx exists)
@@ -229,8 +260,8 @@ useEffect(() => {
   // Any change must invalidate downstream decisions.
   setSelectedScreenSize("Auto");
 
-  setRowCount(1);
-  setSelectedRiserHeightIn(0);
+  setRowCount(DESIGN_CONSTANTS.DEFAULT_ROW_COUNT);
+  setSelectedRiserHeightIn(DESIGN_CONSTANTS.DEFAULT_RISER_HEIGHT_IN);
 
   setCenterViewMode("speakers");
   setShowSoundVisualization(false);
@@ -240,8 +271,8 @@ useEffect(() => {
   // Speaker mounting affects screen, seating, and viewing geometry
   setSelectedScreenSize("Auto");
 
-  setRowCount(1);
-  setSelectedRiserHeightIn(0);
+  setRowCount(DESIGN_CONSTANTS.DEFAULT_ROW_COUNT);
+  setSelectedRiserHeightIn(DESIGN_CONSTANTS.DEFAULT_RISER_HEIGHT_IN);
 
   setCenterViewMode("speakers");
 }, [speakerMountType]);
@@ -251,13 +282,13 @@ useEffect(() => {
 // ============================================================
 
 // Ceiling depth is FIXED (services: AC, fresh air, electrical)
-const CEILING_ACOUSTIC_DEPTH_IN = 12;
+const CEILING_ACOUSTIC_DEPTH_IN = DESIGN_CONSTANTS.CEILING_ACOUSTIC_DEPTH_IN;
 
 // User-selectable wall treatment depths (inches)
-const [frontWallDepthIn, setFrontWallDepthIn] = useState<number>(4);
-const [backWallDepthIn, setBackWallDepthIn] = useState<number>(4);
-const [leftWallDepthIn, setLeftWallDepthIn] = useState<number>(4);
-const [rightWallDepthIn, setRightWallDepthIn] = useState<number>(4);
+const [frontWallDepthIn, setFrontWallDepthIn] = useState<number>(DESIGN_CONSTANTS.DEFAULT_WALL_DEPTH_IN);
+const [backWallDepthIn, setBackWallDepthIn] = useState<number>(DESIGN_CONSTANTS.DEFAULT_WALL_DEPTH_IN);
+const [leftWallDepthIn, setLeftWallDepthIn] = useState<number>(DESIGN_CONSTANTS.DEFAULT_WALL_DEPTH_IN);
+const [rightWallDepthIn, setRightWallDepthIn] = useState<number>(DESIGN_CONSTANTS.DEFAULT_WALL_DEPTH_IN);
 const [selectedScreenSize, setSelectedScreenSize] = useState<number | "Auto">("Auto");
 
 /* ============================================================
@@ -292,8 +323,8 @@ useEffect(() => {
     setSpeakerLayoutChoice("Auto");
     setSelectedScreenSize("Auto");
     // --- Seating ---
-    setRowCount(1);
-    setSelectedRiserHeightIn(0);
+    setRowCount(DESIGN_CONSTANTS.DEFAULT_ROW_COUNT);
+    setSelectedRiserHeightIn(DESIGN_CONSTANTS.DEFAULT_RISER_HEIGHT_IN);
     // --- Center panel safety ---
     setCenterViewMode("speakers");
     setShowSoundVisualization(false);
@@ -746,6 +777,26 @@ if (acousticMode === null) {
 // ---------- PHASE 3.1 : Sound Visualization Toggle ----------
 const [showSoundVisualization, setShowSoundVisualization] = useState(true);
 
+// ---------- PHASE 3.2 : Zoom & Pan Controls ----------
+const [zoomLevel, setZoomLevel] = useState<number>(1);
+const [panX, setPanX] = useState<number>(0);
+const [panY, setPanY] = useState<number>(0);
+const svgRef = useRef<SVGSVGElement>(null);
+
+// Reset zoom/pan function
+const resetView = () => {
+  setZoomLevel(1);
+  setPanX(0);
+  setPanY(0);
+};
+
+// Fit to screen function
+const fitToScreen = () => {
+  setZoomLevel(1);
+  setPanX(0);
+  setPanY(0);
+};
+
 // ============================================================
 // STEP A — CENTER PANEL VIEW MODE & LAYER ARCHITECTURE (ORDERED)
 // ============================================================
@@ -782,6 +833,47 @@ const [centerViewMode, setCenterViewMode] =
   ) {
     setShowSoundVisualization(false);
   }
+}, [centerViewMode]);
+
+// ---------- Keyboard Shortcuts for View Modes ----------
+useEffect(() => {
+  const handleKeyPress = (e: KeyboardEvent) => {
+    // Only trigger if not typing in an input field
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
+      return;
+    }
+    
+    switch(e.key) {
+      case '1':
+        setCenterViewMode('speakers');
+        break;
+      case '2':
+        setCenterViewMode('projector');
+        break;
+      case '3':
+        setCenterViewMode('acoustic');
+        break;
+      case '4':
+        setCenterViewMode('seating');
+        break;
+      case '5':
+        setCenterViewMode('combined');
+        break;
+      case 's':
+      case 'S':
+        if (centerViewMode === 'speakers' || centerViewMode === 'combined') {
+          setShowSoundVisualization(prev => !prev);
+        }
+        break;
+      case 'r':
+      case 'R':
+        resetView();
+        break;
+    }
+  };
+  
+  window.addEventListener('keydown', handleKeyPress);
+  return () => window.removeEventListener('keydown', handleKeyPress);
 }, [centerViewMode]);
 
 // ---------- View → Layer mapping (ORDER LOCKED) ----------
@@ -1884,10 +1976,8 @@ const rightWallDepthPx = rightWallDepthIn * inchToPx;
 const usableRoom = {
   x: rawRoom.x + leftWallDepthPx,
 
-  y:
-    rawRoom.y +
-    frontWallDepthPx +
-    frontObstructionDepthPx,
+  // Only wall depth shifts position
+  y: rawRoom.y + frontWallDepthPx,
 
   width: Math.max(
     0,
@@ -1896,6 +1986,8 @@ const usableRoom = {
       rightWallDepthPx
   ),
 
+  // Obstruction reduces usable depth,
+  // but does NOT shift the entire room
   length: Math.max(
     0,
     rawRoom.length -
@@ -4172,50 +4264,96 @@ if (finalVerdict === "Recommended") {
 }
 
 // ---------- STEP 4.3 : PDF Export Handler (SAFE SINGLE INSTANCE) ----------
+const [isExportingPDF, setIsExportingPDF] = useState<boolean>(false);
+const [exportError, setExportError] = useState<string>("");
+
 const handleExportPDF = async () => {
-  console.log("PDF EXPORT CLICKED");
+  setIsExportingPDF(true);
+  setExportError("");
+  
+  try {
+    const element = document.getElementById("pdf-export-area");
+    if (!element) {
+      throw new Error("Export area not found. Please try again.");
+    }
 
-  const element = document.getElementById("pdf-export-area");
-  if (!element) return;
+    const html2canvas = (await import("html2canvas")).default;
+    const jsPDF = (await import("jspdf")).default;
 
-  const html2canvas = (await import("html2canvas")).default;
-  const jsPDF = (await import("jspdf")).default;
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#020617",
+    });
 
-  const canvas = await html2canvas(element, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: "#020617",
-  });
+    const imgData = canvas.toDataURL("image/png");
 
-  const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "px",
+      format: "a4",
+    });
 
-  const pdf = new jsPDF({
-    orientation: "portrait",
-    unit: "px",
-    format: "a4",
-  });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-  const imgWidth = pageWidth;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
 
-  let heightLeft = imgHeight;
-  let position = 0;
-
-  pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-  heightLeft -= pageHeight;
-
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight;
-    pdf.addPage();
     pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    
+    pdf.save("home-theater-design.pdf");
+    
+  } catch (error) {
+    console.error("PDF Export Error:", error);
+    setExportError(
+      error instanceof Error 
+        ? error.message 
+        : "Failed to export PDF. Please try again."
+    );
+  } finally {
+    setIsExportingPDF(false);
   }
-  
-  pdf.save("home-theater-design.pdf");
 };
+
+// ============================================================
+// RESET RESULTS WHEN INPUTS CHANGE
+// ============================================================
+useEffect(() => {
+  // Any change to room dimensions requires re-applying
+  setShowResults(false);
+}, [length, width, height]);
+
+useEffect(() => {
+  // Any change to acoustic settings requires re-applying
+  setShowResults(false);
+}, [acousticMode, frontWallDepthIn, backWallDepthIn, leftWallDepthIn, rightWallDepthIn]);
+
+useEffect(() => {
+  // Any change to speaker configuration requires re-applying
+  setShowResults(false);
+}, [speakerLayoutChoice, speakerMountType]);
+
+useEffect(() => {
+  // Any change to screen size requires re-applying
+  setShowResults(false);
+}, [selectedScreenSize]);
+
+useEffect(() => {
+  // Any change to seating requires re-applying
+  setShowResults(false);
+}, [rowCount, seatsPerRow, selectedRiserHeightIn, aisleType]);
 
 const isLegendItemActive = (layer: DrawingLayer) =>
   isLayerVisible(layer);
@@ -4362,6 +4500,15 @@ if (masterVerdict === "Not Recommended") {
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
     }
   }
 `}
@@ -4605,6 +4752,32 @@ if (masterVerdict === "Not Recommended") {
     </div>
   </div>
 </div>
+
+{/* Dimension Error Notification */}
+{dimensionError && (
+  <div
+    style={{
+      background: "#7F1D1D",
+      border: "1px solid #DC2626",
+      borderRadius: "8px",
+      padding: "12px",
+      fontSize: "12px",
+      color: "#FEE2E2",
+      display: "flex",
+      alignItems: "flex-start",
+      gap: "8px",
+    }}
+  >
+    <span style={{ fontSize: "16px" }}>⚠️</span>
+    <div>
+      <strong style={{ display: "block", marginBottom: "4px" }}>
+        Dimension Error
+      </strong>
+      {dimensionError}
+    </div>
+  </div>
+)}
+
 {/* ============================================================ */}
 {/* CARD 2 — Acoustic Mode */}
 {/* ============================================================ */}
@@ -5278,7 +5451,7 @@ if (masterVerdict === "Not Recommended") {
     display: "flex",
     flexDirection: "column",
     gap: "12px",
-    ...(isScreenUnlocked ? LP_CARD_ANIMATION_STYLE : LP_LOCKED_STYLE),
+    ...(isScreenUnlocked ? LP_CARD_ANIMATION_STYLE : LEFT_PANEL_LOCKED_STYLE),
   }}
 >
 
@@ -5480,7 +5653,7 @@ if (masterVerdict === "Not Recommended") {
     display: "flex",
     flexDirection: "column",
     gap: "12px",
-    ...(isSeatingUnlocked ? LP_CARD_ANIMATION_STYLE : LP_LOCKED_STYLE),
+    ...(isSeatingUnlocked ? LP_CARD_ANIMATION_STYLE : LEFT_PANEL_LOCKED_STYLE),
   }}
 >
   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -5684,6 +5857,32 @@ if (masterVerdict === "Not Recommended") {
 </div>
 
 {/* ============================================================ */}
+{/* APPLY BUTTON */}
+{/* ============================================================ */}
+<button
+  onClick={handleApplyChanges}
+  disabled={!hasValidDimensions}
+  style={{
+    width: "100%",
+    padding: "14px",
+    marginTop: "20px",
+    background: hasValidDimensions ? (showResults ? "#22C55E" : "#3B82F6") : "#1F2937",
+    color: hasValidDimensions ? "white" : "#64748B",
+    fontWeight: 700,
+    fontSize: "14px",
+    borderRadius: "8px",
+    border: "none",
+    cursor: hasValidDimensions ? "pointer" : "not-allowed",
+  }}
+>
+  {!hasValidDimensions 
+    ? "⚬ Enter All Room Dimensions" 
+    : showResults 
+      ? "✓ Applied" 
+      : "→ Apply & Show Results"}
+</button>
+
+{/* ============================================================ */}
 
   {/* ================= END LEFT PANEL ================= */}
 
@@ -5711,6 +5910,9 @@ if (masterVerdict === "Not Recommended") {
       <p style={{ fontSize: "12px", opacity: 0.6 }}>
         Visualization updates dynamically based on inputs
       </p>
+      <p style={{ fontSize: "10px", opacity: 0.4, marginTop: "4px", fontFamily: "monospace" }}>
+        v2.1 - Speakers Fixed Build - {new Date().toISOString().slice(0,16)}
+      </p>
     </div>
 
    {/* ================= CENTER VIEW MODE CONTROLS ================= */}
@@ -5723,30 +5925,61 @@ if (masterVerdict === "Not Recommended") {
   }}
 >
   {[
-    "speakers",
-    "projector",
-    "acoustic",
-    "seating",
-    "combined",
-  ].map((mode) => (
+    { mode: "speakers", icon: "🔊", label: "Speakers" },
+    { mode: "projector", icon: "📽️", label: "Projector" },
+    { mode: "acoustic", icon: "🎵", label: "Acoustic" },
+    { mode: "seating", icon: "💺", label: "Seating" },
+    { mode: "combined", icon: "🎬", label: "All Layers" },
+  ].map(({ mode, icon, label }) => (
     <button
       key={mode}
       onClick={() => setCenterViewMode(mode as CenterViewMode)}
       style={{
-        padding: "6px 10px",
+        padding: "8px 14px",
         fontSize: "12px",
         borderRadius: "6px",
-        border: "1px solid #334155",
-        background:
-          centerViewMode === mode ? "#22C55E" : "#020617",
-        color:
-          centerViewMode === mode ? "#022c22" : "#94A3B8",
+        border: centerViewMode === mode ? "1.5px solid #3B82F6" : "1px solid #334155",
+        background: centerViewMode === mode ? "#1E3A8A" : "#020617",
+        color: centerViewMode === mode ? "#FFFFFF" : "#94A3B8",
         cursor: "pointer",
+        fontWeight: centerViewMode === mode ? 600 : 400,
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        transition: "all 0.2s ease",
+      }}
+      onMouseEnter={(e) => {
+        if (centerViewMode !== mode) {
+          e.currentTarget.style.borderColor = "#475569";
+          e.currentTarget.style.background = "#0F172A";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (centerViewMode !== mode) {
+          e.currentTarget.style.borderColor = "#334155";
+          e.currentTarget.style.background = "#020617";
+        }
       }}
     >
-      {mode.toUpperCase()}
+      <span>{icon}</span>
+      <span>{label}</span>
     </button>
   ))}
+</div>
+
+{/* Dynamic View Description */}
+<div style={{
+  fontSize: "12px",
+  color: "#94A3B8",
+  marginBottom: "12px",
+  fontStyle: "italic",
+  paddingLeft: "4px",
+}}>
+  {centerViewMode === "speakers" && "Speaker placement, angles, and sound propagation analysis"}
+  {centerViewMode === "projector" && "Screen size, throw distance, and viewing angles"}
+  {centerViewMode === "acoustic" && "Wall treatments, bass traps, and acoustic panels"}
+  {centerViewMode === "seating" && "Row placement, riser heights, and sightlines"}
+  {centerViewMode === "combined" && "Complete room layout with all systems"}
 </div> 
 
 {/* ================= SOUND VISUALIZATION CONTROL ================= */}
@@ -5820,1109 +6053,1158 @@ if (masterVerdict === "Not Recommended") {
     </div>
 )}
 
-{/* ================= LAYER LEGEND ================= */}
+{/* ================= ZOOM, PAN & EXPORT CONTROLS ================= */}
+<div style={{
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "10px 14px",
+  borderRadius: "6px",
+  border: "1px solid #334155",
+  background: "#020617",
+  marginBottom: "10px",
+  flexWrap: "wrap",
+  gap: "10px",
+}}>
+  {/* Zoom Controls */}
+  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <span style={{ fontSize: "11px", color: "#94A3B8", fontWeight: 600 }}>Zoom:</span>
+    <button
+      onClick={() => setZoomLevel(Math.max(0.5, zoomLevel - 0.1))}
+      disabled={zoomLevel <= 0.5}
+      style={{
+        padding: "4px 10px",
+        fontSize: "14px",
+        background: "#0F172A",
+        border: "1px solid #334155",
+        borderRadius: "4px",
+        color: zoomLevel <= 0.5 ? "#475569" : "#E2E8F0",
+        cursor: zoomLevel <= 0.5 ? "not-allowed" : "pointer",
+      }}
+    >
+      🔍−
+    </button>
+    <span style={{
+      fontSize: "12px",
+      color: "#E2E8F0",
+      fontWeight: 600,
+      minWidth: "45px",
+      textAlign: "center",
+    }}>
+      {Math.round(zoomLevel * 100)}%
+    </span>
+    <button
+      onClick={() => setZoomLevel(Math.min(2, zoomLevel + 0.1))}
+      disabled={zoomLevel >= 2}
+      style={{
+        padding: "4px 10px",
+        fontSize: "14px",
+        background: "#0F172A",
+        border: "1px solid #334155",
+        borderRadius: "4px",
+        color: zoomLevel >= 2 ? "#475569" : "#E2E8F0",
+        cursor: zoomLevel >= 2 ? "not-allowed" : "pointer",
+      }}
+    >
+      🔍+
+    </button>
+    <button
+      onClick={resetView}
+      style={{
+        padding: "4px 10px",
+        fontSize: "11px",
+        background: "#0F172A",
+        border: "1px solid #334155",
+        borderRadius: "4px",
+        color: "#94A3B8",
+        cursor: "pointer",
+      }}
+    >
+      ⟲ Reset
+    </button>
+    <button
+      onClick={fitToScreen}
+      style={{
+        padding: "4px 10px",
+        fontSize: "11px",
+        background: "#0F172A",
+        border: "1px solid #334155",
+        borderRadius: "4px",
+        color: "#94A3B8",
+        cursor: "pointer",
+      }}
+    >
+      ⛶ Fit
+    </button>
+  </div>
+
+  {/* Screenshot/Export Button */}
+  <button
+    onClick={() => {
+      if (!svgRef.current) return;
+      
+      // Create canvas for export
+      const canvas = document.createElement('canvas');
+      const svg = svgRef.current;
+      const bbox = svg.getBBox();
+      
+      canvas.width = bbox.width;
+      canvas.height = bbox.height;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      // Serialize SVG to string
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      
+      // Load SVG into image and draw to canvas
+      const img = new Image();
+      img.onload = () => {
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        
+        // Download canvas as PNG
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const link = document.createElement('a');
+          link.download = `room-layout-${centerViewMode}-${new Date().getTime()}.png`;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+          URL.revokeObjectURL(link.href);
+        });
+      };
+      img.src = url;
+    }}
+    disabled={!hasValidDimensions}
+    style={{
+      padding: "6px 12px",
+      fontSize: "12px",
+      background: hasValidDimensions ? "#059669" : "#334155",
+      border: "1px solid #334155",
+      borderRadius: "6px",
+      color: hasValidDimensions ? "#FFFFFF" : "#64748B",
+      cursor: hasValidDimensions ? "pointer" : "not-allowed",
+      fontWeight: 600,
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+    }}
+  >
+    📷 Export Image
+  </button>
+</div>
+
+{/* Keyboard Shortcuts Help */}
+<div style={{
+  fontSize: "10px",
+  color: "#64748B",
+  marginBottom: "10px",
+  paddingLeft: "4px",
+}}>
+  Shortcuts: <kbd style={{ background: "#0F172A", padding: "1px 4px", borderRadius: "3px", border: "1px solid #334155" }}>1-5</kbd> Switch views
+  • <kbd style={{ background: "#0F172A", padding: "1px 4px", borderRadius: "3px", border: "1px solid #334155" }}>S</kbd> Toggle sound
+  • <kbd style={{ background: "#0F172A", padding: "1px 4px", borderRadius: "3px", border: "1px solid #334155" }}>R</kbd> Reset view
+</div>
+
+{/* ================= LAYER LEGEND (COMPACT HORIZONTAL) ================= */}
 <div
   style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-    gap: "8px",
-    padding: "10px 12px",
-    borderRadius: "8px",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "12px",
+    padding: "8px 14px",
+    borderRadius: "6px",
     border: "1px solid #334155",
     background: "#020617",
     marginBottom: "10px",
     fontSize: "11px",
+    alignItems: "center",
   }}
 >
-  {/* Structure */}
-  <div style={{ opacity: isLegendItemActive("structure") ? 1 : 0.4 }}>
-    <span style={{ color: "#475569" }}>■</span> Room Structure
-  </div>
+  <span style={{ fontWeight: 600, color: "#E2E8F0", marginRight: "4px" }}>
+    Active Layers:
+  </span>
+  
+  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+    <div style={{ opacity: isLegendItemActive("structure") ? 1 : 0.3, display: "flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#475569", fontSize: "14px" }}>▪</span>
+      <span>Structure</span>
+    </div>
 
-  {/* Screen */}
-  <div style={{ opacity: isLegendItemActive("screen") ? 1 : 0.4 }}>
-    <span style={{ color: "#22C55E" }}>■</span> Screen
-  </div>
+    <div style={{ opacity: isLegendItemActive("screen") ? 1 : 0.3, display: "flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#22C55E", fontSize: "14px" }}>▪</span>
+      <span>Screen</span>
+    </div>
 
-  {/* Seating */}
-  <div style={{ opacity: isLegendItemActive("seating") ? 1 : 0.4 }}>
-    <span style={{ color: "#38BDF8" }}>■</span> Seating
-  </div>
+    <div style={{ opacity: isLegendItemActive("seating") ? 1 : 0.3, display: "flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#38BDF8", fontSize: "14px" }}>▪</span>
+      <span>Seating</span>
+    </div>
 
-  {/* Riser */}
-  <div style={{ opacity: isLegendItemActive("riser") ? 1 : 0.4 }}>
-    <span style={{ color: "#FACC15" }}>■</span> Riser
-  </div>
+    <div style={{ opacity: isLegendItemActive("riser") ? 1 : 0.3, display: "flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#FACC15", fontSize: "14px" }}>▪</span>
+      <span>Riser</span>
+    </div>
 
-  {/* Speakers */}
-  <div style={{ opacity: isLegendItemActive("speakers") ? 1 : 0.4 }}>
-    <span style={{ color: "#38BDF8" }}>●</span> Speakers
-  </div>
+    <div style={{ opacity: isLegendItemActive("speakers") ? 1 : 0.3, display: "flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#38BDF8", fontSize: "14px" }}>●</span>
+      <span>Speakers</span>
+    </div>
 
-  {/* Subwoofers */}
-  <div style={{ opacity: isLegendItemActive("subwoofers") ? 1 : 0.4 }}>
-    <span style={{ color: "#7F1D1D" }}>■</span> Subwoofers
-  </div>
+    <div style={{ opacity: isLegendItemActive("subwoofers") ? 1 : 0.3, display: "flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#7F1D1D", fontSize: "14px" }}>■</span>
+      <span>Subwoofers</span>
+    </div>
 
-  {/* Sound */}
-  <div style={{ opacity: isLegendItemActive("sound") ? 1 : 0.4 }}>
-    <span style={{ color: "#94A3B8" }}>◌</span> Sound Waves
-  </div>
+    <div style={{ opacity: isLegendItemActive("sound") ? 1 : 0.3, display: "flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#94A3B8", fontSize: "14px" }}>◌</span>
+      <span>Sound</span>
+    </div>
 
-  {/* Acoustic */}
-  <div style={{ opacity: isLegendItemActive("acoustic") ? 1 : 0.4 }}>
-    <span style={{ color: "#7C3AED" }}>■</span> Acoustic Treatment
-  </div>
+    <div style={{ opacity: isLegendItemActive("acoustic") ? 1 : 0.3, display: "flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#7C3AED", fontSize: "14px" }}>■</span>
+      <span>Acoustic</span>
+    </div>
 
-  {/* Angles */}
-  <div style={{ opacity: isLegendItemActive("angles") ? 1 : 0.4 }}>
-    <span style={{ color: "#FACC15" }}>⟂</span> Angles
-  </div>
+    <div style={{ opacity: isLegendItemActive("angles") ? 1 : 0.3, display: "flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#FACC15", fontSize: "14px" }}>⟂</span>
+      <span>Angles</span>
+    </div>
 
-  {/* Dimensions */}
-  <div style={{ opacity: isLegendItemActive("dimensions") ? 1 : 0.4 }}>
-    <span style={{ color: "#CBD5F5" }}>↔</span> Dimensions
+    <div style={{ opacity: isLegendItemActive("dimensions") ? 1 : 0.3, display: "flex", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#CBD5F5", fontSize: "14px" }}>↔</span>
+      <span>Dimensions</span>
+    </div>
   </div>
 </div>
 
   {/* SVG CANVAS */}
-  {hasValidDimensions ? (
+  {showResults && hasValidDimensions ? (
     <svg
+      ref={svgRef}
       width={visualRoomWidth + 40}
       height={visualRoomLength + 40}
-      viewBox={`0 0 ${visualRoomWidth + 40} ${visualRoomLength + 40}`}
+      viewBox={`${panX} ${panY} ${(visualRoomWidth + 40) / zoomLevel} ${(visualRoomLength + 40) / zoomLevel}`}
       style={{
         border: "1px dashed #334155",
         borderRadius: "8px",
         background: "#020617",
+        cursor: zoomLevel > 1 ? "move" : "default",
+      }}
+      onMouseDown={(e) => {
+        if (zoomLevel <= 1) return;
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startPanX = panX;
+        const startPanY = panY;
+        
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+          const dx = (startX - moveEvent.clientX) / zoomLevel;
+          const dy = (startY - moveEvent.clientY) / zoomLevel;
+          setPanX(startPanX + dx);
+          setPanY(startPanY + dy);
+        };
+        
+        const handleMouseUp = () => {
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+        };
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
       }}
     >
 
 
-{/* ================= DRAWING START ================= */}
 
-{/* ============================================================ */}
-{/* C1 — SPEAKER & SUBWOOFER RENDER (SINGLE AUTHORITY) */}
-{/* ============================================================ */}
-{isLayerVisible("speakers") && (
-  <g id="layer-speakers-authoritative">
+{/* ================= PROFESSIONAL VISUAL RENDERING ================= */}
 
-{/* ---------- FRONT LCR (WALL SPEAKERS — RECTANGLES) ---------- */}
-<rect
-  x={finalLeftSpeakerX - 6}
-  y={usableRoom.y + frontWallDepthPx + 2}
-  width={12}
-  height={8}
-  rx={2}
-  fill="#38BDF8"
-/>
-    <rect
-      x={finalCenterSpeakerX - 6}
-      y={usableRoom.y + 4}
-      width={12}
-      height={8}
-      fill="#38BDF8"
-    />
-    <rect
-      x={finalRightSpeakerX - 6}
-      y={usableRoom.y + 4}
-      width={12}
-      height={8}
-      fill="#38BDF8"
-    />
-
-    {/* ---------- SIDE SURROUNDS ---------- */}
-    {finalBaseSpeakerLayer === "7" && (
-      <>
-        <rect
-          x={usableRoom.x + 4}
-          y={firstRowY - seatDepthFt - 6}
-          width={8}
-          height={12}
-          rx={2}
-          fill="#38BDF8"
-        />
-        <rect
-          x={usableRoomRight - 12}
-          y={firstRowY - seatDepthFt - 6}
-          width={8}
-          height={12}
-          rx={2}
-          fill="#38BDF8"
-        />
-      </>
-    )}
-
-    {/* ---------- ATMOS (CEILING — CIRCLES) ---------- */}
-    {heightSpeakerLayer !== "0" && (
-      <>
-        <circle
-          cx={usableRoomCenterX - Math.min(usableRoom.width * 0.15, 60)}
-          cy={usableRoom.y + usableRoom.length * 0.35}
-          r={5}
-          fill="#FACC15"
-          stroke="#92400E"
-          strokeWidth={1}
-        />
-        <circle
-          cx={usableRoomCenterX + Math.min(usableRoom.width * 0.15, 60)}
-          cy={usableRoom.y + usableRoom.length * 0.35}
-          r={5}
-          fill="#FACC15"
-          stroke="#92400E"
-          strokeWidth={1}
-        />
-
-        {heightSpeakerLayer === "4" && (
-          <>
-            <circle
-              cx={usableRoomCenterX - Math.min(usableRoom.width * 0.15, 60)}
-              cy={usableRoom.y + usableRoom.length * 0.65}
-              r={5}
-              fill="#FACC15"
-              stroke="#92400E"
-              strokeWidth={1} 
-            />
-            <circle
-              cx={usableRoomCenterX + Math.min(usableRoom.width * 0.15, 60)}
-              cy={usableRoom.y + usableRoom.length * 0.65}
-              r={5}
-              fill="#FACC15"
-              stroke="#92400E"
-              strokeWidth={1}
-            />
-          </>
-        )}
-      </>
-    )}
-
-    {/* ---------- SUBWOOFERS (SQUARES) ---------- */}
-    {subwooferCount >= 1 && (
-      <rect
-        x={usableRoomCenterX - 6}
-        y={usableRoom.y + 10}
-        width={12}
-        height={12}
-        fill="#7F1D1D"
-        stroke="#FCA5A5"
-        strokeWidth={1.2}
-      />
-    )}
-
-    {subwooferCount >= 2 && (
-      <>
-        <rect
-          x={usableRoom.x + usableRoom.width * 0.25 - 6}
-          y={usableRoom.y + 10}
-          width={12}
-          height={12}
-          fill="#7F1D1D"
-          stroke="#FCA5A5"
-          strokeWidth={1.2}
-        />
-        <rect
-          x={usableRoom.x + usableRoom.width * 0.75 - 6}
-          y={usableRoom.y + 10}
-          width={12}
-          height={12}
-          fill="#7F1D1D"
-          stroke="#FCA5A5"
-          strokeWidth={1.2}
-        />
-      </>
-    )}
-  </g>
-)}
-
-{/* ============================================================ */}
-{/* M1 — RAW ROOM (ENTERED DIMENSIONS) */}
-{/* ============================================================ */}
-<g id="layer-room-raw">
+{/* LAYER 1: RAW ROOM BOUNDARY */}
+<g id="layer-raw-room">
   <rect
     x={rawRoom.x}
     y={rawRoom.y}
     width={rawRoom.width}
     height={rawRoom.length}
-    rx={8}
     fill="none"
     stroke="#475569"
     strokeWidth={1.5}
     strokeDasharray="6 4"
+    opacity={0.5}
   />
-
-  <text
-    x={rawRoomCenterX}
-    y={rawRoom.y - 8}
-    textAnchor="middle"
-    fontSize="10"
-    fill="#64748B"
-  >
-    Entered Room (Architectural)
-  </text>
+  {isLayerVisible("dimensions") && (
+    <text
+      x={rawRoomCenterX}
+      y={rawRoom.y - 8}
+      textAnchor="middle"
+      fontSize="9"
+      fill="#64748B"
+    >
+      Architectural ({Math.round(rawRoom.width / VISUAL_SCALE)}' × {Math.round(rawRoom.length / VISUAL_SCALE)}')
+    </text>
+  )}
 </g>
 
-{/* ============================================================ */}
-{/* M1 — ACOUSTIC TREATMENT THICKNESS */}
-{/* ============================================================ */}
+{/* LAYER 2: ACOUSTIC TREATMENT ZONES */}
 {isLayerVisible("acoustic") && (
-  <g id="layer-acoustic-thickness">
-    <rect
-  x={rawRoom.x}
-  y={rawRoom.y}
-  width={rawRoom.width}
-  height={rawRoom.length}
-  fill="#7C3AED"
-  opacity={0.06}
-  stroke="#7C3AED"
-  strokeWidth={
-  Math.max(
-    frontWallDepthIn,
-    backWallDepthIn,
-    leftWallDepthIn,
-    rightWallDepthIn
-  ) * inchToPx * 2
-}
- />
-
-    <text
-      x={rawRoom.centerX}
-      y={rawRoom.bottom + 14}
-      textAnchor="middle"
-      fontSize="10"
-      fill="#C4B5FD"
-    >
-      Front: {frontWallDepthIn}" | 
-Back: {backWallDepthIn}" | 
-Left: {leftWallDepthIn}" | 
-Right: {rightWallDepthIn}" | 
-Ceiling: {CEILING_ACOUSTIC_DEPTH_IN}"
-    </text>
+  <g id="layer-acoustic-zones">
+    {frontWallDepthPx > 0 && (
+      <>
+        <rect
+          x={rawRoom.x}
+          y={rawRoom.y}
+          width={rawRoom.width}
+          height={frontWallDepthPx}
+          fill="#7C3AED"
+          opacity={0.12}
+        />
+        <line
+          x1={rawRoom.x}
+          y1={rawRoom.y + frontWallDepthPx}
+          x2={rawRoomRight}
+          y2={rawRoom.y + frontWallDepthPx}
+          stroke="#A78BFA"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+          opacity={0.4}
+        />
+      </>
+    )}
+    
+    {backWallDepthPx > 0 && (
+      <>
+        <rect
+          x={rawRoom.x}
+          y={rawRoomBottom - backWallDepthPx}
+          width={rawRoom.width}
+          height={backWallDepthPx}
+          fill="#7C3AED"
+          opacity={0.12}
+        />
+        <line
+          x1={rawRoom.x}
+          y1={rawRoomBottom - backWallDepthPx}
+          x2={rawRoomRight}
+          y2={rawRoomBottom - backWallDepthPx}
+          stroke="#A78BFA"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+          opacity={0.4}
+        />
+      </>
+    )}
+    
+    {leftWallDepthPx > 0 && (
+      <>
+        <rect
+          x={rawRoom.x}
+          y={rawRoom.y + frontWallDepthPx}
+          width={leftWallDepthPx}
+          height={rawRoom.length - frontWallDepthPx - backWallDepthPx}
+          fill="#7C3AED"
+          opacity={0.12}
+        />
+        <line
+          x1={rawRoom.x + leftWallDepthPx}
+          y1={rawRoom.y + frontWallDepthPx}
+          x2={rawRoom.x + leftWallDepthPx}
+          y2={rawRoomBottom - backWallDepthPx}
+          stroke="#A78BFA"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+          opacity={0.4}
+        />
+      </>
+    )}
+    
+    {rightWallDepthPx > 0 && (
+      <>
+        <rect
+          x={rawRoomRight - rightWallDepthPx}
+          y={rawRoom.y + frontWallDepthPx}
+          width={rightWallDepthPx}
+          height={rawRoom.length - frontWallDepthPx - backWallDepthPx}
+          fill="#7C3AED"
+          opacity={0.12}
+        />
+        <line
+          x1={rawRoomRight - rightWallDepthPx}
+          y1={rawRoom.y + frontWallDepthPx}
+          x2={rawRoomRight - rightWallDepthPx}
+          y2={rawRoomBottom - backWallDepthPx}
+          stroke="#A78BFA"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+          opacity={0.4}
+        />
+      </>
+    )}
+    
+    {(bassTrapCoverage === "All" || bassTrapCoverage === "RearOnly") && (
+      <>
+        {bassTrapCoverage === "All" && (
+          <>
+            <rect x={usableRoom.x} y={usableRoom.y} width={bassTrapSizePx} height={bassTrapSizePx} fill="#DC2626" opacity={0.25} />
+            <rect x={usableRoomRight - bassTrapSizePx} y={usableRoom.y} width={bassTrapSizePx} height={bassTrapSizePx} fill="#DC2626" opacity={0.25} />
+          </>
+        )}
+        <rect x={usableRoom.x} y={usableRoomBottom - bassTrapSizePx} width={bassTrapSizePx} height={bassTrapSizePx} fill="#DC2626" opacity={0.25} />
+        <rect x={usableRoomRight - bassTrapSizePx} y={usableRoomBottom - bassTrapSizePx} width={bassTrapSizePx} height={bassTrapSizePx} fill="#DC2626" opacity={0.25} />
+      </>
+    )}
   </g>
 )}
 
-{/* ============================================================ */}
-{/* M1 — USABLE ROOM (AUTHORITATIVE GEOMETRY) */}
-{/* ============================================================ */}
-<g id="layer-room-usable">
+{/* LAYER 3: USABLE ROOM BOUNDARY */}
+<g id="layer-usable-room">
   <rect
     x={usableRoom.x}
     y={usableRoom.y}
     width={usableRoom.width}
     height={usableRoom.length}
-    rx={6}
-    fill="#0F172A"
+    fill="rgba(15, 23, 42, 0.3)"
     stroke="#22C55E"
     strokeWidth={2}
+    rx={4}
   />
-
- {isLayerVisible("dimensions") && (
-  <text
-    x={usableRoomCenterX}
-    y={usableRoom.y - 8}
-    textAnchor="middle"
-    fontSize="10"
-    fill="#86EFAC"
-  >
-    Usable Room (Post-Acoustic)
-  </text>
-)}
-</g>
-
-{/* ============================================================ */}
-{/* PHASE 6.4 — SCREEN PLANE (ACOUSTIC-ALIGNED) */}
-{/* ============================================================ */}
-{isLayerVisible("screen") && usableRoom && (
-  <g id="layer-screen-plane">
-
-    {/* Screen sits exactly at usable front wall */}
-    <rect
-      x={usableRoomCenterX - visualScreenWidth / 2}
-      y={usableRoom.y}
-      width={visualScreenWidth}
-      height={12}
-      rx={4}
-      fill="#22C55E"
-    />
-
-    {isLayerVisible("angles") && (
-      <text
-        x={usableRoomCenterX}
-        y={usableRoom.y - 8}
-        textAnchor="middle"
-        fontSize="10"
-        fill="#86EFAC"
-      >
-        Screen ({selectedAspectRatio})
-      </text>
-    )}
-
-  </g>
-)}
-
-{/* ============================================================ */}
-{/* PHASE 6.5 — SCREEN → LISTENER AXIS */}
-{/* ============================================================ */}
-{isLayerVisible("angles") && (
-  <g id="layer-axis">
-  <line
-    x1={usableRoomCenterX}
-    y1={usableRoom.y}
-    x2={usableRoomCenterX}
-    y2={primaryListenerY}
-    stroke="#38BDF8"
-    strokeWidth={1}
-    strokeDasharray="4 4"
-    opacity={0.7}
-  />
-
-  <circle
-    cx={usableRoomCenterX}
-    cy={primaryListenerY}
-    r={3}
-    fill="#38BDF8"
-  />
-
-  <text
-    x={usableRoomCenterX + 6}
-    y={primaryListenerY + 4}
-    fontSize="10"
-    fill="#7DD3FC"
-  >
-    Main Listening Axis
-  </text>
-</g>
-)}
-
-{isLayerVisible("acoustic") && (
-  <g id="layer-acoustic">
-    {/* ============================================================
-       PHASE 2D — ACOUSTIC DEPTH VISUAL ENVELOPES (GEOMETRY ONLY)
-       ============================================================ */}
-
-    {/* FRONT WALL ACOUSTIC DEPTH */}
-    {frontWallDepthIn > 0 && (
-      <rect
-        x={rawRoom.x}
-        y={rawRoom.y}
-        width={rawRoom.width}
-        height={frontWallDepthPx}
-        fill="#7C3AED"
-        opacity={0.35}
-      />
-    )}
-
-    {/* REAR WALL ACOUSTIC DEPTH */}
-    {backWallDepthIn > 0 && (
-      <rect
-        x={rawRoom.x}
-        y={rawRoomBottom - backWallDepthPx}
-        width={rawRoom.width}
-        height={backWallDepthPx}
-        fill="#7C3AED"
-        opacity={0.35}
-      />
-    )}
-
-    {/* LEFT WALL ACOUSTIC DEPTH */}
-    {leftWallDepthIn > 0 && (
-      <rect
-        x={rawRoom.x}
-        y={rawRoom.y + frontWallDepthPx}
-        width={leftWallDepthPx}
-        height={rawRoom.length - frontWallDepthPx - backWallDepthPx}
-        fill="#7C3AED"
-        opacity={0.35}
-      />
-    )}
-
-    {/* RIGHT WALL ACOUSTIC DEPTH */}
-    {rightWallDepthIn > 0 && (
-      <rect
-        x={rawRoomRight - rightWallDepthPx}
-        y={rawRoom.y + frontWallDepthPx}
-        width={rightWallDepthPx}
-        height={rawRoom.length - frontWallDepthPx - backWallDepthPx}
-        fill="#7C3AED"
-        opacity={0.35}
-      />
-    )}
-  </g>
-)}
-
-{/* ============================================================
-   PHASE 2E — ACOUSTIC DEPTH LABELS (READ-ONLY)
-   ============================================================ */}
-
-{/* FRONT WALL LABEL */}
-{frontWallDepthIn > 0 && (
-  <text
-    x={rawRoomCenterX}
-    y={rawRoom.y + frontWallDepthPx / 2}
-    textAnchor="middle"
-    dominantBaseline="middle"
-    fontSize="11"
-    fill="#E9D5FF"
-    opacity={0.9}
-  >
-    Front Wall · {frontWallDepthIn}″
-  </text>
-)}
-
-{/* REAR WALL LABEL */}
-{backWallDepthIn > 0 && (
-  <text
-    x={rawRoomCenterX}
-    y={rawRoomBottom - backWallDepthPx / 2}
-    textAnchor="middle"
-    dominantBaseline="middle"
-    fontSize="11"
-    fill="#E9D5FF"
-    opacity={0.9}
-  >
-    Rear Wall · {backWallDepthIn}″
-  </text>
-)}
-
-{/* LEFT WALL LABEL */}
-{leftWallDepthIn > 0 && (
-  <text
-    x={rawRoom.x + leftWallDepthPx / 2}
-    y={usableRoomCenterY}
-    textAnchor="middle"
-    dominantBaseline="middle"
-    fontSize="11"
-    fill="#E9D5FF"
-    opacity={0.9}
-    transform={`rotate(-90 ${rawRoom.x + leftWallDepthPx / 2} ${usableRoomCenterY})`}
-  >
-    Left Wall · {leftWallDepthIn}″
-  </text>
-)}
-
-{/* RIGHT WALL LABEL */}
-{rightWallDepthIn > 0 && (
-  <text
-    x={rawRoomRight - rightWallDepthPx / 2}
-    y={usableRoomCenterY}
-    textAnchor="middle"
-    dominantBaseline="middle"
-    fontSize="11"
-    fill="#E9D5FF"
-    opacity={0.9}
-    transform={`rotate(90 ${rawRoomRight - rightWallDepthPx / 2} ${usableRoomCenterY})`}
-  >
-    Right Wall · {rightWallDepthIn}″
-  </text>
-)}
-
-{/* ============================================================ */}
-{/* Bass Traps — Corner Low Frequency Control */}
-{/* ============================================================ */}
-{(bassTrapCoverage === "All" || bassTrapCoverage === "RearOnly") && (
-  <g>
-    {/* ---------- FRONT LEFT CORNER ---------- */}
-    {bassTrapCoverage === "All" && (
-      <rect
-        x={usableRoom.x}
-        y={usableRoom.y}
-        width={bassTrapSizePx}
-        height={bassTrapSizePx}
-        fill="#7C2D12"
-        opacity={0.65}
-      />
-    )}
-
-    {/* ---------- FRONT RIGHT CORNER ---------- */}
-    {bassTrapCoverage === "All" && (
-      <rect
-        x={usableRoomRight - bassTrapSizePx}
-        y={usableRoom.y}
-        width={bassTrapSizePx}
-        height={bassTrapSizePx}
-        fill="#7C2D12"
-        opacity={0.65}
-      />
-    )}
-
-    {/* ---------- REAR LEFT CORNER ---------- */}
-    <rect
-      x={usableRoom.x}
-      y={usableRoomBottom - bassTrapSizePx}
-      width={bassTrapSizePx}
-      height={bassTrapSizePx}
-      fill="#7C2D12"
-      opacity={0.65}
-    />
-
-    {/* ---------- REAR RIGHT CORNER ---------- */}
-    <rect
-      x={usableRoomRight - bassTrapSizePx}
-      y={usableRoomBottom - bassTrapSizePx}
-      width={bassTrapSizePx}
-      height={bassTrapSizePx}
-      fill="#7C2D12"
-      opacity={0.65}
-    />
-
-    {/* ---------- LABEL ---------- */}
+  {isLayerVisible("dimensions") && (
     <text
       x={usableRoomCenterX}
-      y={usableRoomBottom - 6}
-      textAnchor="middle"
-      fontSize="10"
-      fill="#FCA5A5"
-      opacity={0.85}
-    >
-      Bass Traps (Low-Frequency Control)
-    </text>
-  </g>
-)}
-
-{/* ============================================================
-    PHASE 2D — ACOUSTIC DEPTH VISUAL ENVELOPES
-   ============================================================ */}
-
-{/* FRONT */}
-{effectiveFrontWallDepthIn > 0 && (
-  <rect
-    x={rawRoom.x}
-    y={rawRoom.y}
-    width={rawRoom.width}
-    height={frontWallDepthPx}
-    fill="#7C3AED"
-    opacity={0.35}
-  />
-)}
-
-{/* REAR */}
-{effectiveBackWallDepthIn > 0 && (
-  <rect
-    x={rawRoom.x}
-    y={rawRoomBottom - backWallDepthPx}
-    width={rawRoom.width}
-    height={backWallDepthPx}
-    fill="#7C3AED"
-    opacity={0.35}
-  />
-)}
-
-{/* LEFT */}
-{effectiveLeftWallDepthIn > 0 && (
-  <rect
-    x={rawRoom.x}
-    y={rawRoom.y + frontWallDepthPx}
-    width={leftWallDepthPx}
-    height={rawRoom.length - frontWallDepthPx - backWallDepthPx}
-    fill="#7C3AED"
-    opacity={0.35}
-  />
-)}
-
-{/* RIGHT */}
-{effectiveRightWallDepthIn > 0 && (
-  <rect
-    x={rawRoomRight - rightWallDepthPx}
-    y={rawRoom.y + frontWallDepthPx}
-    width={rightWallDepthPx}
-    height={rawRoom.length - frontWallDepthPx - backWallDepthPx}
-    fill="#7C3AED"
-    opacity={0.35}
-  />
-)}
-
-{/* ============================================================ */}
-{/* PHASE 7.9 — REAR WALL DIFFUSER / ABSORBER */}
-{/* ============================================================ */}
-{isLayerVisible("acoustic") &&
-  <g id="layer-rear-diffuser">
-   <rect
-  x={rearDiffuserX}
-  y={rearDiffuserY}
-  width={rearDiffuserWidthPx}
-  height={rearDiffuserHeightPx}
-  fill={diffuserColor}
-  opacity={0.55}
-  stroke="#FCD34D"
-  strokeWidth={1}
-  strokeDasharray="4 3"
-/>
-    <text
-      x={usableRoomCenterX}
-      y={rearDiffuserY - 6}
-      textAnchor="middle"
-      fontSize="9"
-      fill="#FCD34D"
-    >
-      Rear Diffusion (Preserves Energy & Spaciousness)
-    </text>
-  </g>}
-
-{isLayerVisible("acoustic") &&
-  rearWallTreatment === "Absorber" && (
-  <g id="layer-rear-absorber">
-    <rect
-  x={rearPanelX}
-  y={rearPanelY}
-  width={rearPanelWidth}
-  height={rearPanelDepthPx}
-  fill={absorberColor}
-  opacity={0.85}
-  stroke="#4C1D95"
-  strokeWidth={1}
-/>
-    <text
-      x={usableRoomCenterX}
-      y={rearPanelY - 6}
-      textAnchor="middle"
-      fontSize="9"
-      fill="#DDD6FE"
-    >
-      Rear Absorption (Controls Reflections & Echo)
-    </text>
-  </g>
-)}
-
-{/* ============================================================ */}
-{/* PHASE 6.6 — ROW 1 SEATING (AUTHORITATIVE SAFE VERSION) */}
-{/* ============================================================ */}
-
-{isLayerVisible("seating") &&
-  firstRowY > 0 &&
-  usableRoom &&
-  (() => {
-
-    // 1 inch clearance from each wall
-    const sideGapPx = inchToPx;
-
-    // Max seats allowed by usable width
-    const maxSeatsByWidth = Math.floor(
-      (usableRoom.width - sideGapPx * 2) / seatWidthPx
-    );
-
-    const authoritativeSeats = Math.max(
-      1,
-      Math.min(seatsPerRow, maxSeatsByWidth)
-    );
-
-    const totalSeatsWidth =
-      authoritativeSeats * seatWidthPx;
-
-    // Perfect center alignment inside usable room
-    const startX =
-      usableRoom.x +
-      sideGapPx +
-      (usableRoom.width - totalSeatsWidth - sideGapPx * 2) / 2;
-
-    return (
-      <g id="layer-row-1-seating">
-
-        {Array.from({ length: authoritativeSeats }).map((_, i) => (
-          <rect
-            key={`row1-seat-${i}`}
-            x={startX + i * seatWidthPx}
-            y={firstRowY}
-            width={seatWidthPx - 4}
-            height={seatDepthPx}
-            rx={10}
-            fill="#0EA5E9"
-            stroke="#0284C7"
-            strokeWidth={1}
-          />
-        ))}
-
-        <text
-          x={usableRoomCenterX}
-          y={firstRowY + seatDepthPx + 18}
-          textAnchor="middle"
-          fontSize="10"
-          fill="#94A3B8"
-        >
-          Row 1 — Main Listening Position
-        </text>
-
-      </g>
-    );
-  })()}
-  
-{/* ============================================================ */}
-{/* PHASE 6.7 — ROW 2 SEATING + RISER (GATED) */}
-{/* ============================================================ */}
-{seatingRecommendation === "2 Rows Recommended" &&
-  secondRowY > 0 && (
-    <g id="layer-row-2-seating">
-
-      {/* ---------- RISER LINE ---------- */}
-      <line
-        x1={usableRoom. x}
-        y1={(firstRowY + secondRowY) / 2}
-        x2={usableRoomRight}
-        y2={(firstRowY + secondRowY) / 2}
-        stroke="#FACC15"
-        strokeWidth={2}
-        strokeDasharray="4 4"
-      />
-
-{/* ---------- ROW 2 SEATS ---------- */}
-{isLayerVisible("seating") &&
-  seatingRecommendation === "2 Rows Recommended" &&
-  secondRowY > 0 && (() => {
-
-    const sideGapPx = (1 / 12) * VISUAL_SCALE; // 1 inch gap
-
-    const maxSeatsByGeometry = Math.floor(
-      (usableRoom.width - 2 * sideGapPx) / seatWidthPx
-    );
-
-    const safeSeats = Math.min(seatsPerRow, maxSeatsByGeometry);
-
-    const totalSeatsWidth = safeSeats * seatWidthPx;
-
-    const startX =
-      usableRoom.x +
-      sideGapPx +
-      (usableRoom.width - totalSeatsWidth - sideGapPx * 2) / 2;
-
-    return Array.from({ length: safeSeats }).map((_, i) => (
-      <rect
-        key={`row2-seat-${i}`}
-        x={startX + i * seatWidthPx}
-        y={secondRowY}
-        width={seatWidthPx - 2}
-        height={seatDepthPx}
-        rx={4}
-        fill="#38BDF8"
-        opacity={0.85}
-      />
-    ));
-})()}
-      
-
-      {/* ---------- ROW 2 LABEL ---------- */}
-      <text
-        x={usableRoomCenterX}
-        y={secondRowY + seatDepthFt + 14}
-        textAnchor="middle"
-        fontSize="10"
-        fill="#94A3B8"
-      >
-        Row 2 (Riser)
-      </text>
-    </g>
-)}
-
-{/* ================= PROJECTOR & SCREEN VIEW ================= */}
-{isLayerVisible("screen") && isLayerVisible("angles") && (
-  <g id="layer-projector-view">
-
-    {horizontalLensShiftStatus === "Not Possible" && (
-  <text
-    x={roomLeftX + visualRoomWidth / 2}
-    y={screenY - 22}
-    textAnchor="middle"
-    fontSize="10"
-    fill="#EF4444"
-  >
-    ⚠ Lens shift exceeds projector limits
-  </text>
-)}
-{horizontalLensShiftStatus === "Not Possible" && (
-  <text
-    x={projectorX}
-    y={projectorY + 30}
-    textAnchor="middle"
-    fontSize="10"
-    fill="#EF4444"
-  >
-    ⚠ Horizontal lens shift limit exceeded
-  </text>
-)}
-
-{screenBottomStatus === "Too Low" && (
-  <text
-    x={roomLeftX + visualRoomWidth / 2}
-    y={screenY - 36}
-    textAnchor="middle"
-    fontSize="10"
-    fill="#EF4444"
-  >
-    ⚠ Screen too low for center speaker
-  </text>
-)}
-
-    {/* ---------- SCREEN ---------- */}
-    <rect
-      x={screenX}
-      y={screenY}
-      width={visualScreenWidth}
-      height={visualScreenDepth}
-      fill="#22C55E"
-      rx={4}
-    />
-
-    <text
-      x={roomLeftX + visualRoomWidth / 2}
-      y={screenY - 8}
+      y={usableRoom.y - 8}
       textAnchor="middle"
       fontSize="10"
       fill="#86EFAC"
+      fontWeight="600"
     >
-      Screen ({selectedAspectRatio})
+      Usable Room
     </text>
+  )}
+</g>
 
-    {/* ---------- PROJECTOR BODY ---------- */}
+{/* LAYER 4: SCREEN */}
+{isLayerVisible("screen") && visualScreenWidth > 0 && (
+  <g id="layer-screen">
     <rect
-      x={projectorX - 8}
-      y={projectorY - 8}
-      width={16}
-      height={16}
+      x={usableRoomCenterX - visualScreenWidth / 2}
+      y={screenY}
+      width={visualScreenWidth}
+      height={visualScreenDepth}
+      fill="#1E3A5F"
+      stroke="#22C55E"
+      strokeWidth={2.5}
       rx={3}
-      fill="#94A3B8"
-      stroke="#CBD5F5"
-      strokeWidth={1}
     />
-
-    <text
-      x={projectorX}
-      y={projectorY + 18}
-      textAnchor="middle"
-      fontSize="10"
-      fill="#CBD5F5"
-    >
-      Projector
-    </text>
-
-    {/* ---------- THROW CONE (V SHAPE) ---------- */}
-    <line
-      x1={projectorX}
-      y1={projectorY}
-      x2={screenX}
-      y2={screenY + visualScreenDepth}
-      stroke="#60A5FA"
-      strokeWidth={1}
-      strokeDasharray="4 4"
+    <rect
+      x={usableRoomCenterX - visualScreenWidth / 2 + 3}
+      y={screenY + 3}
+      width={visualScreenWidth - 6}
+      height={visualScreenDepth - 6}
+      fill="#0F172A"
+      opacity={0.5}
     />
-
-    <line
-      x1={projectorX}
-      y1={projectorY}
-      x2={screenX + visualScreenWidth}
-      y2={screenY + visualScreenDepth}
-      stroke="#60A5FA"
-      strokeWidth={1}
-      strokeDasharray="4 4"
-    />
-
-    {/* ---------- VIEWING DISTANCE ---------- */}
-    <line
-      x1={roomLeftX + visualRoomWidth / 2}
-      y1={screenY + visualScreenDepth}
-      x2={roomLeftX + visualRoomWidth / 2}
-      y2={projectorY}
-      stroke="#FACC15"
-      strokeWidth={1}
-      strokeDasharray="2 4"
-    />
-
-    <text
-      x={roomLeftX + visualRoomWidth / 2 + 6}
-      y={(screenY + projectorY) / 2}
-      fontSize="10"
-      fill="#FACC15"
-    >
-      Viewing Distance
-    </text>
-
+    {isLayerVisible("dimensions") && (
+      <text
+        x={usableRoomCenterX}
+        y={screenY - 10}
+        textAnchor="middle"
+        fontSize="11"
+        fill="#22C55E"
+        fontWeight="700"
+      >
+        {Math.round(visualScreenWidth / VISUAL_SCALE)}' Screen ({selectedAspectRatio})
+      </text>
+    )}
   </g>
 )}
 
-
-{/* ================= SOUND VISUALIZATION LAYER ================= */}
-{isLayerVisible("sound") &&
-  showSoundVisualization && (
-  <g id="layer-sound" pointerEvents="none">
-
-    {/* ---------- WALL SPEAKER CONES (FRONT LCR) ---------- */}
-    {[
-      {
-        x: roomLeftX + visualRoomWidth * 0.25,
-        y: roomTopY + 11,
-        angle: 25,
-        color: WALL_SPEAKER_COLOR,
-      },
-      {
-        x: roomLeftX + visualRoomWidth * 0.5,
-        y: roomTopY + 11,
-        angle: 20,
-        color: WALL_SPEAKER_COLOR,
-      },
-      {
-        x: roomLeftX + visualRoomWidth * 0.75,
-        y: roomTopY + 11,
-        angle: 25,
-        color: WALL_SPEAKER_COLOR,
-      },
-    ].map((spk, i) => {
-      const depth = roomBottomY - spk.y;
-      const spread = Math.tan((spk.angle * Math.PI) / 180) * depth;
-
+{/* LAYER 5: SEATING ROWS */}
+{isLayerVisible("seating") && firstRowY > 0 && (
+  <g id="layer-seating">
+    {(() => {
+      const sideGapPx = inchToPx * 12;
+      const availableWidth = usableRoom.width - sideGapPx * 2;
+      const maxSeatsRow = Math.floor(availableWidth / seatWidthPx);
+      const authoritativeSeats = Math.min(seatsPerRow, maxSeatsRow);
+      const actualRowWidth = authoritativeSeats * seatWidthPx;
+      const startX = usableRoom.x + (usableRoom.width - actualRowWidth) / 2;
+      
       return (
-        <path
-          key={`wall-cone-${i}`}
-          d={`
-            M ${spk.x} ${spk.y}
-            L ${spk.x - spread} ${roomBottomY}
-            L ${spk.x + spread} ${roomBottomY}
-            Z
-          `}
-          fill={spk.color}
-          opacity={0.08}
-        />
+        <>
+          {/* Row 1 */}
+          <g id="seating-row-1">
+            {Array.from({ length: authoritativeSeats }).map((_, i) => (
+              <g key={`seat-r1-${i}`}>
+                <rect
+                  x={startX + i * seatWidthPx}
+                  y={firstRowY}
+                  width={seatWidthPx - 4}
+                  height={seatDepthPx}
+                  fill="#0EA5E9"
+                  stroke="#0284C7"
+                  strokeWidth={2}
+                  rx={6}
+                />
+                <rect
+                  x={startX + i * seatWidthPx + 4}
+                  y={firstRowY + 4}
+                  width={seatWidthPx - 12}
+                  height={seatDepthPx * 0.4}
+                  fill="#0369A1"
+                  opacity={0.5}
+                  rx={3}
+                />
+              </g>
+            ))}
+            {isLayerVisible("dimensions") && (
+              <text
+                x={startX - 15}
+                y={firstRowY + seatDepthPx / 2}
+                fontSize="9"
+                fill="#38BDF8"
+                fontWeight="600"
+              >
+                R1
+              </text>
+            )}
+          </g>
+          
+          {/* Row 2 with Riser */}
+          {rowCount >= 2 && secondRowY > 0 && (
+            <>
+              <rect
+                x={usableRoom.x + 5}
+                y={secondRowY - (selectedRiserHeightIn * inchToPx) - 5}
+                width={usableRoom.width - 10}
+                height={(selectedRiserHeightIn * inchToPx) + seatDepthPx + 15}
+                fill="#78350F"
+                opacity={0.08}
+                stroke="#92400E"
+                strokeWidth={1.5}
+                strokeDasharray="5 5"
+                rx={4}
+              />
+              <g id="seating-row-2">
+                {Array.from({ length: authoritativeSeats }).map((_, i) => (
+                  <g key={`seat-r2-${i}`}>
+                    <rect
+                      x={startX + i * seatWidthPx}
+                      y={secondRowY}
+                      width={seatWidthPx - 4}
+                      height={seatDepthPx}
+                      fill="#3B82F6"
+                      stroke="#2563EB"
+                      strokeWidth={2}
+                      rx={6}
+                    />
+                    <rect
+                      x={startX + i * seatWidthPx + 4}
+                      y={secondRowY + 4}
+                      width={seatWidthPx - 12}
+                      height={seatDepthPx * 0.4}
+                      fill="#1E40AF"
+                      opacity={0.5}
+                      rx={3}
+                    />
+                  </g>
+                ))}
+                {isLayerVisible("dimensions") && (
+                  <>
+                    <text
+                      x={startX - 15}
+                      y={secondRowY + seatDepthPx / 2}
+                      fontSize="9"
+                      fill="#60A5FA"
+                      fontWeight="600"
+                    >
+                      R2
+                    </text>
+                    <text
+                      x={usableRoomCenterX}
+                      y={secondRowY - (selectedRiserHeightIn * inchToPx) + 10}
+                      textAnchor="middle"
+                      fontSize="8"
+                      fill="#D97706"
+                      opacity={0.7}
+                    >
+                      Riser: {selectedRiserHeightIn}"
+                    </text>
+                  </>
+                )}
+              </g>
+            </>
+          )}
+        </>
       );
-    })}
-
-    {/* ---------- SIDE SURROUND CONES ---------- */}
-    {baseSpeakerLayer === "7" &&
-      [
-        {
-          x: roomLeftX + 10,
-          y: roomTopY + visualRoomLength * 0.55,
-          dir: 1,
-        },
-        {
-          x: roomRightX - 10,
-          y: roomTopY + visualRoomLength * 0.55,
-          dir: -1,
-        },
-      ].map((spk, i) => {
-        const depth = visualRoomWidth;
-        const spread = Math.tan((30 * Math.PI) / 180) * depth;
-
-        return (
-          <path
-            key={`side-cone-${i}`}
-            d={`
-              M ${spk.x} ${spk.y}
-              L ${spk.x + spk.dir * depth} ${spk.y - spread}
-              L ${spk.x + spk.dir * depth} ${spk.y + spread}
-              Z
-            `}
-            fill={WALL_SPEAKER_COLOR}
-            opacity={0.08}
-          />
-        );
-      })}
-
-    {/* ---------- ATMOS CIRCULAR WAVES ---------- */}
-    {finalHeightSpeakerLayer !== "0" &&
-      [
-        {
-          x: roomLeftX + visualRoomWidth * 0.33,
-          y: roomTopY + visualRoomLength * 0.4,
-        },
-        {
-          x: roomLeftX + visualRoomWidth * 0.66,
-          y: roomTopY + visualRoomLength * 0.4,
-        },
-        ...(heightLayer === "4"
-          ? [
-              {
-                x: roomLeftX + visualRoomWidth * 0.33,
-                y: roomTopY + visualRoomLength * 0.65,
-              },
-              {
-                x: roomLeftX + visualRoomWidth * 0.66,
-                y: roomTopY + visualRoomLength * 0.65,
-              },
-            ]
-          : []),
-      ].flatMap((spk, i) =>
-        generateWaveRings(
-          spk.x,
-          spk.y,
-          Math.min(
-            spk.x - roomLeftX,
-            roomRightX - spk.x,
-            spk.y - roomTopY,
-            roomBottomY - spk.y
-          ),
-          4
-        ).map((ring, r) => (
-          <circle
-            key={`atmos-wave-${i}-${r}`}
-            cx={spk.x}
-            cy={spk.y}
-            r={ring.r}
-            stroke={CEILING_SPEAKER_COLOR}
-            strokeWidth="1"
-            fill="none"
-            opacity={ring.opacity}
-          />
-        ))
-      )}
-
-    {/* ---------- SUBWOOFER CIRCULAR WAVES ---------- */}
-   {[
-  { x: roomLeftX + 12, y: roomTopY + 12 },
-  ...(subwooferCount >= 2
-    ? [{ x: roomRightX - 12, y: roomTopY + 12 }]
-    : []),
-  ...(subwooferCount >= 4
-    ? [
-        { x: roomRightX - 12, y: roomBottomY - 12 },
-        { x: roomLeftX + 12, y: roomBottomY - 12 },
-      ]
-    : []),
-].flatMap((sub, i) =>
-  generateWaveRings(
-    sub.x,
-    sub.y,
-    Math.min(visualRoomWidth, visualRoomLength) * 0.6,
-    8
-  ).map((ring, r) => (
-    <circle
-      key={`sub-wave-${i}-${r}`}
-      cx={sub.x}
-      cy={sub.y}
-      r={ring.r}
-      stroke={SUBWOOFER_COLOR}
-      strokeWidth="1.6"
-      fill="none"
-      opacity={ring.opacity}
-    />
-  ))
-)}
-
+    })()}
   </g>
 )}
 
-{/* ---------- STEP 21 : SEATING ROW 2 (DUPLICATE — DISABLED)
-     Handled by layer-seating-authoritative
-     DO NOT RENDER HERE
-*/}
-
-
-{/* ---------- STEP 27 : Row 2 label (SEATING VIEW ONLY) ---------- */}
-
-{/* ---------- STEP 26 : Row 2 seat count (SEATING VIEW ONLY) ---------- */}
-
-{/* ---------- STEP 24 : RISER STEP LINE (GATED) ---------- */}
-{isLayerVisible("seating") &&
-  isSecondRowAllowed &&
-  firstRowY > 0 &&
-  secondRowY > 0 && (
-    <line
-      x1={roomLeftX}
-      y1={clampY((firstRowY + secondRowY) / 2)}
-      x2={roomRightX}
-      y2={clampY((firstRowY + secondRowY) / 2)}
-      stroke="#FACC15"
-      strokeWidth="2"
-      strokeDasharray="4 4"
-    />
+{/* LAYER 6: FRONT SPEAKERS (L, C, R) */}
+{isLayerVisible("speakers") && (
+  <g id="layer-front-speakers">
+    {/* Left Speaker */}
+    <g>
+      <rect
+        x={usableRoom.x + SPEAKER_ON_WALL_OFFSET_PX}
+        y={usableRoom.y + 12}
+        width={WALL_SPEAKER_WIDTH_PX}
+        height={WALL_SPEAKER_HEIGHT_PX}
+        fill="#1E293B"
+        stroke={WALL_SPEAKER_COLOR}
+        strokeWidth={2.5}
+        rx={2}
+      />
+      <circle
+        cx={usableRoom.x + SPEAKER_ON_WALL_OFFSET_PX + WALL_SPEAKER_WIDTH_PX / 2}
+        cy={usableRoom.y + 12 + WALL_SPEAKER_HEIGHT_PX / 2}
+        r={2.5}
+        fill={WALL_SPEAKER_COLOR}
+      />
+      <text
+        x={usableRoom.x + SPEAKER_ON_WALL_OFFSET_PX + WALL_SPEAKER_WIDTH_PX / 2}
+        y={usableRoom.y + 30}
+        fill={WALL_SPEAKER_COLOR}
+        fontSize="10"
+        fontWeight="700"
+        textAnchor="middle"
+      >
+        L
+      </text>
+    </g>
+    
+    {/* Center Speaker */}
+    <g>
+      <rect
+        x={usableRoomCenterX - WALL_SPEAKER_WIDTH_PX / 2}
+        y={usableRoom.y + 12}
+        width={WALL_SPEAKER_WIDTH_PX}
+        height={WALL_SPEAKER_HEIGHT_PX}
+        fill="#1E293B"
+        stroke="#22C55E"
+        strokeWidth={2.5}
+        rx={2}
+      />
+      <circle
+        cx={usableRoomCenterX}
+        cy={usableRoom.y + 12 + WALL_SPEAKER_HEIGHT_PX / 2}
+        r={2.5}
+        fill="#22C55E"
+      />
+      <text
+        x={usableRoomCenterX}
+        y={usableRoom.y + 30}
+        fill="#22C55E"
+        fontSize="10"
+        fontWeight="700"
+        textAnchor="middle"
+      >
+        C
+      </text>
+    </g>
+    
+    {/* Right Speaker */}
+    <g>
+      <rect
+        x={usableRoomRight - SPEAKER_ON_WALL_OFFSET_PX - WALL_SPEAKER_WIDTH_PX}
+        y={usableRoom.y + 12}
+        width={WALL_SPEAKER_WIDTH_PX}
+        height={WALL_SPEAKER_HEIGHT_PX}
+        fill="#1E293B"
+        stroke={WALL_SPEAKER_COLOR}
+        strokeWidth={2.5}
+        rx={2}
+      />
+      <circle
+        cx={usableRoomRight - SPEAKER_ON_WALL_OFFSET_PX - WALL_SPEAKER_WIDTH_PX / 2}
+        cy={usableRoom.y + 12 + WALL_SPEAKER_HEIGHT_PX / 2}
+        r={2.5}
+        fill={WALL_SPEAKER_COLOR}
+      />
+      <text
+        x={usableRoomRight - SPEAKER_ON_WALL_OFFSET_PX - WALL_SPEAKER_WIDTH_PX / 2}
+        y={usableRoom.y + 30}
+        fill={WALL_SPEAKER_COLOR}
+        fontSize="10"
+        fontWeight="700"
+        textAnchor="middle"
+      >
+        R
+      </text>
+    </g>
+  </g>
 )}
 
+{/* LAYER 7: SUBWOOFERS */}
+{isLayerVisible("speakers") && subwooferCount > 0 && (
+  <g id="layer-subwoofers">
+    {subwooferCount === 1 ? (
+      <g>
+        <rect
+          x={usableRoomCenterX - SUB_SIZE_PX / 2}
+          y={usableRoom.y + 40}
+          width={SUB_SIZE_PX}
+          height={SUB_SIZE_PX}
+          fill={SUBWOOFER_COLOR}
+          stroke="#DC2626"
+          strokeWidth={2.5}
+          rx={2}
+        />
+        <rect
+          x={usableRoomCenterX - SUB_SIZE_PX / 3}
+          y={usableRoom.y + 40 + SUB_SIZE_PX / 3}
+          width={SUB_SIZE_PX / 1.5}
+          height={SUB_SIZE_PX / 1.5}
+          fill="#450A0A"
+          rx={1}
+        />
+      </g>
+    ) : subwooferCount === 2 ? (
+      <>
+        <g>
+          <rect
+            x={usableRoom.x + usableRoom.width * 0.25 - SUB_SIZE_PX / 2}
+            y={usableRoom.y + 40}
+            width={SUB_SIZE_PX}
+            height={SUB_SIZE_PX}
+            fill={SUBWOOFER_COLOR}
+            stroke="#DC2626"
+            strokeWidth={2.5}
+            rx={2}
+          />
+          <rect
+            x={usableRoom.x + usableRoom.width * 0.25 - SUB_SIZE_PX / 3}
+            y={usableRoom.y + 40 + SUB_SIZE_PX / 3}
+            width={SUB_SIZE_PX / 1.5}
+            height={SUB_SIZE_PX / 1.5}
+            fill="#450A0A"
+            rx={1}
+          />
+        </g>
+        <g>
+          <rect
+            x={usableRoom.x + usableRoom.width * 0.75 - SUB_SIZE_PX / 2}
+            y={usableRoom.y + 40}
+            width={SUB_SIZE_PX}
+            height={SUB_SIZE_PX}
+            fill={SUBWOOFER_COLOR}
+            stroke="#DC2626"
+            strokeWidth={2.5}
+            rx={2}
+          />
+          <rect
+            x={usableRoom.x + usableRoom.width * 0.75 - SUB_SIZE_PX / 3}
+            y={usableRoom.y + 40 + SUB_SIZE_PX / 3}
+            width={SUB_SIZE_PX / 1.5}
+            height={SUB_SIZE_PX / 1.5}
+            fill="#450A0A"
+            rx={1}
+          />
+        </g>
+      </>
+    ) : (
+      <>
+        <rect x={usableRoom.x + 15} y={usableRoom.y + 30} width={SUB_SIZE_PX} height={SUB_SIZE_PX} fill={SUBWOOFER_COLOR} stroke="#DC2626" strokeWidth={2} rx={2} />
+        <rect x={usableRoomRight - 15 - SUB_SIZE_PX} y={usableRoom.y + 30} width={SUB_SIZE_PX} height={SUB_SIZE_PX} fill={SUBWOOFER_COLOR} stroke="#DC2626" strokeWidth={2} rx={2} />
+        <rect x={usableRoom.x + 15} y={usableRoomBottom - 30 - SUB_SIZE_PX} width={SUB_SIZE_PX} height={SUB_SIZE_PX} fill={SUBWOOFER_COLOR} stroke="#DC2626" strokeWidth={2} rx={2} />
+        <rect x={usableRoomRight - 15 - SUB_SIZE_PX} y={usableRoomBottom - 30 - SUB_SIZE_PX} width={SUB_SIZE_PX} height={SUB_SIZE_PX} fill={SUBWOOFER_COLOR} stroke="#DC2626" strokeWidth={2} rx={2} />
+      </>
+    )}
+  </g>
+)}
 
-{/* ================= DRAWING END ================= */}
+{/* LAYER 8: SURROUND SPEAKERS */}
+{isLayerVisible("speakers") && (finalBaseSpeakerLayer === "7" || Number(finalBaseSpeakerLayer) >= 7) && (
+  <g id="layer-surround-speakers">
+    <g>
+      <rect
+        x={usableRoom.x + 2}
+        y={usableRoom.y + usableRoom.length * 0.4 - WALL_SPEAKER_HEIGHT_PX / 2}
+        width={WALL_SPEAKER_WIDTH_PX}
+        height={WALL_SPEAKER_HEIGHT_PX}
+        fill="#1E293B"
+        stroke={WALL_SPEAKER_COLOR}
+        strokeWidth={2}
+        rx={2}
+      />
+      <circle
+        cx={usableRoom.x + 2 + WALL_SPEAKER_WIDTH_PX / 2}
+        cy={usableRoom.y + usableRoom.length * 0.4}
+        r={2}
+        fill={WALL_SPEAKER_COLOR}
+      />
+      <text
+        x={usableRoom.x + 2 + WALL_SPEAKER_WIDTH_PX + 6}
+        y={usableRoom.y + usableRoom.length * 0.4 + 4}
+        fill={WALL_SPEAKER_COLOR}
+        fontSize="9"
+        fontWeight="700"
+      >
+        SL
+      </text>
+    </g>
+    
+    <g>
+      <rect
+        x={usableRoomRight - 2 - WALL_SPEAKER_WIDTH_PX}
+        y={usableRoom.y + usableRoom.length * 0.4 - WALL_SPEAKER_HEIGHT_PX / 2}
+        width={WALL_SPEAKER_WIDTH_PX}
+        height={WALL_SPEAKER_HEIGHT_PX}
+        fill="#1E293B"
+        stroke={WALL_SPEAKER_COLOR}
+        strokeWidth={2}
+        rx={2}
+      />
+      <circle
+        cx={usableRoomRight - 2 - WALL_SPEAKER_WIDTH_PX / 2}
+        cy={usableRoom.y + usableRoom.length * 0.4}
+        r={2}
+        fill={WALL_SPEAKER_COLOR}
+      />
+      <text
+        x={usableRoomRight - 2 - WALL_SPEAKER_WIDTH_PX - 18}
+        y={usableRoom.y + usableRoom.length * 0.4 + 4}
+        fill={WALL_SPEAKER_COLOR}
+        fontSize="9"
+        fontWeight="700"
+        textAnchor="end"
+      >
+        SR
+      </text>
+    </g>
+  </g>
+)}
+
+{/* LAYER 9: REAR SPEAKERS (9.1+) */}
+{isLayerVisible("speakers") && (finalBaseSpeakerLayer === "9" || Number(finalBaseSpeakerLayer) >= 9) && (
+  <g id="layer-rear-speakers">
+    <g>
+      <rect
+        x={usableRoom.x + usableRoom.width * 0.3 - WALL_SPEAKER_WIDTH_PX / 2}
+        y={usableRoomBottom - 15}
+        width={WALL_SPEAKER_WIDTH_PX}
+        height={WALL_SPEAKER_HEIGHT_PX}
+        fill="#1E293B"
+        stroke={WALL_SPEAKER_COLOR}
+        strokeWidth={2}
+        rx={2}
+      />
+      <circle
+        cx={usableRoom.x + usableRoom.width * 0.3}
+        cy={usableRoomBottom - 15 + WALL_SPEAKER_HEIGHT_PX / 2}
+        r={2}
+        fill={WALL_SPEAKER_COLOR}
+      />
+      <text
+        x={usableRoom.x + usableRoom.width * 0.3}
+        y={usableRoomBottom - 20}
+        fill={WALL_SPEAKER_COLOR}
+        fontSize="9"
+        fontWeight="700"
+        textAnchor="middle"
+      >
+        RL
+      </text>
+    </g>
+    
+    <g>
+      <rect
+        x={usableRoom.x + usableRoom.width * 0.7 - WALL_SPEAKER_WIDTH_PX / 2}
+        y={usableRoomBottom - 15}
+        width={WALL_SPEAKER_WIDTH_PX}
+        height={WALL_SPEAKER_HEIGHT_PX}
+        fill="#1E293B"
+        stroke={WALL_SPEAKER_COLOR}
+        strokeWidth={2}
+        rx={2}
+      />
+      <circle
+        cx={usableRoom.x + usableRoom.width * 0.7}
+        cy={usableRoomBottom - 15 + WALL_SPEAKER_HEIGHT_PX / 2}
+        r={2}
+        fill={WALL_SPEAKER_COLOR}
+      />
+      <text
+        x={usableRoom.x + usableRoom.width * 0.7}
+        y={usableRoomBottom - 20}
+        fill={WALL_SPEAKER_COLOR}
+        fontSize="9"
+        fontWeight="700"
+        textAnchor="middle"
+      >
+        RR
+      </text>
+    </g>
+  </g>
+)}
+
+{/* LAYER 10: HEIGHT/ATMOS SPEAKERS */}
+{isLayerVisible("speakers") && heightLayer !== "0" && (
+  <g id="layer-height-speakers">
+    <circle
+      cx={usableRoom.x + usableRoom.width * 0.3}
+      cy={usableRoom.y + usableRoom.length * 0.3}
+      r={CEILING_SPEAKER_RADIUS_PX}
+      fill="#78350F"
+      stroke={CEILING_SPEAKER_COLOR}
+      strokeWidth={2.5}
+    />
+    <circle
+      cx={usableRoom.x + usableRoom.width * 0.3}
+      cy={usableRoom.y + usableRoom.length * 0.3}
+      r={CEILING_SPEAKER_RADIUS_PX / 2}
+      fill={CEILING_SPEAKER_COLOR}
+      opacity={0.6}
+    />
+    <text
+      x={usableRoom.x + usableRoom.width * 0.3}
+      y={usableRoom.y + usableRoom.length * 0.3 - 12}
+      fill={CEILING_SPEAKER_COLOR}
+      fontSize="9"
+      fontWeight="700"
+      textAnchor="middle"
+    >
+      TFL
+    </text>
+    
+    <circle
+      cx={usableRoom.x + usableRoom.width * 0.7}
+      cy={usableRoom.y + usableRoom.length * 0.3}
+      r={CEILING_SPEAKER_RADIUS_PX}
+      fill="#78350F"
+      stroke={CEILING_SPEAKER_COLOR}
+      strokeWidth={2.5}
+    />
+    <circle
+      cx={usableRoom.x + usableRoom.width * 0.7}
+      cy={usableRoom.y + usableRoom.length * 0.3}
+      r={CEILING_SPEAKER_RADIUS_PX / 2}
+      fill={CEILING_SPEAKER_COLOR}
+      opacity={0.6}
+    />
+    <text
+      x={usableRoom.x + usableRoom.width * 0.7}
+      y={usableRoom.y + usableRoom.length * 0.3 - 12}
+      fill={CEILING_SPEAKER_COLOR}
+      fontSize="9"
+      fontWeight="700"
+      textAnchor="middle"
+    >
+      TFR
+    </text>
+    
+    {heightLayer === "4" && (
+      <>
+        <circle
+          cx={usableRoom.x + usableRoom.width * 0.3}
+          cy={usableRoom.y + usableRoom.length * 0.7}
+          r={CEILING_SPEAKER_RADIUS_PX}
+          fill="#78350F"
+          stroke={CEILING_SPEAKER_COLOR}
+          strokeWidth={2.5}
+        />
+        <circle
+          cx={usableRoom.x + usableRoom.width * 0.3}
+          cy={usableRoom.y + usableRoom.length * 0.7}
+          r={CEILING_SPEAKER_RADIUS_PX / 2}
+          fill={CEILING_SPEAKER_COLOR}
+          opacity={0.6}
+        />
+        <text
+          x={usableRoom.x + usableRoom.width * 0.3}
+          y={usableRoom.y + usableRoom.length * 0.7 + 18}
+          fill={CEILING_SPEAKER_COLOR}
+          fontSize="9"
+          fontWeight="700"
+          textAnchor="middle"
+        >
+          TRL
+        </text>
+        
+        <circle
+          cx={usableRoom.x + usableRoom.width * 0.7}
+          cy={usableRoom.y + usableRoom.length * 0.7}
+          r={CEILING_SPEAKER_RADIUS_PX}
+          fill="#78350F"
+          stroke={CEILING_SPEAKER_COLOR}
+          strokeWidth={2.5}
+        />
+        <circle
+          cx={usableRoom.x + usableRoom.width * 0.7}
+          cy={usableRoom.y + usableRoom.length * 0.7}
+          r={CEILING_SPEAKER_RADIUS_PX / 2}
+          fill={CEILING_SPEAKER_COLOR}
+          opacity={0.6}
+        />
+        <text
+          x={usableRoom.x + usableRoom.width * 0.7}
+          y={usableRoom.y + usableRoom.length * 0.7 + 18}
+          fill={CEILING_SPEAKER_COLOR}
+          fontSize="9"
+          fontWeight="700"
+          textAnchor="middle"
+        >
+          TRR
+        </text>
+      </>
+    )}
+  </g>
+)}
+
+{/* LAYER 11: PROJECTOR */}
+{isLayerVisible("screen") && projectorX > 0 && projectorY > 0 && (
+  <g id="layer-projector">
+    <rect
+      x={projectorX - 10}
+      y={projectorY - 8}
+      width={20}
+      height={16}
+      fill="#374151"
+      stroke="#6B7280"
+      strokeWidth={2}
+      rx={3}
+    />
+    <circle
+      cx={projectorX}
+      cy={projectorY}
+      r={4}
+      fill="#1E3A8A"
+      stroke="#60A5FA"
+      strokeWidth={1.5}
+    />
+    <circle
+      cx={projectorX}
+      cy={projectorY}
+      r={2}
+      fill="#93C5FD"
+      opacity={0.8}
+    />
+    
+    {isLayerVisible("angles") && visualScreenWidth > 0 && (
+      <>
+        <line
+          x1={projectorX}
+          y1={projectorY}
+          x2={usableRoomCenterX - visualScreenWidth / 2}
+          y2={screenY + visualScreenDepth / 2}
+          stroke="#FBBF24"
+          strokeWidth={0.8}
+          opacity={0.25}
+          strokeDasharray="3 3"
+        />
+        <line
+          x1={projectorX}
+          y1={projectorY}
+          x2={usableRoomCenterX + visualScreenWidth / 2}
+          y2={screenY + visualScreenDepth / 2}
+          stroke="#FBBF24"
+          strokeWidth={0.8}
+          opacity={0.25}
+          strokeDasharray="3 3"
+        />
+        <line
+          x1={projectorX}
+          y1={projectorY}
+          x2={usableRoomCenterX}
+          y2={screenY + visualScreenDepth / 2}
+          stroke="#FBBF24"
+          strokeWidth={1}
+          opacity={0.35}
+        />
+      </>
+    )}
+  </g>
+)}
+
+{/* LAYER 12: SOUND VISUALIZATION */}
+{isLayerVisible("sound") && showSoundVisualization && firstRowY > 0 && (
+  <g id="layer-sound-viz" opacity={0.25}>
+    <line
+      x1={usableRoomCenterX}
+      y1={usableRoom.y + 16}
+      x2={usableRoomCenterX}
+      y2={firstRowY}
+      stroke="#22C55E"
+      strokeWidth={1.5}
+      strokeDasharray="4 4"
+    />
+    <line
+      x1={usableRoom.x + SPEAKER_ON_WALL_OFFSET_PX + WALL_SPEAKER_WIDTH_PX / 2}
+      y1={usableRoom.y + 16}
+      x2={usableRoomCenterX - (usableRoom.width * 0.15)}
+      y2={firstRowY}
+      stroke={WALL_SPEAKER_COLOR}
+      strokeWidth={1}
+      strokeDasharray="3 3"
+    />
+    <line
+      x1={usableRoomRight - SPEAKER_ON_WALL_OFFSET_PX - WALL_SPEAKER_WIDTH_PX / 2}
+      y1={usableRoom.y + 16}
+      x2={usableRoomCenterX + (usableRoom.width * 0.15)}
+      y2={firstRowY}
+      stroke={WALL_SPEAKER_COLOR}
+      strokeWidth={1}
+      strokeDasharray="3 3"
+    />
+  </g>
+)}
+
+{/* LAYER 13: REFLECTION ZONES */}
+{isLayerVisible("acoustic") && firstRowY > 0 && (
+  <g id="layer-reflection-zones" opacity={0.15}>
+    {/* Side wall first reflections */}
+    <rect
+      x={usableRoom.x}
+      y={(screenY + firstRowY) / 2 - 20}
+      width={leftWallDepthPx + 15}
+      height={40}
+      fill="#F59E0B"
+      stroke="#F59E0B"
+      strokeWidth={1}
+      strokeDasharray="4 4"
+    />
+    <rect
+      x={usableRoomRight - rightWallDepthPx - 15}
+      y={(screenY + firstRowY) / 2 - 20}
+      width={rightWallDepthPx + 15}
+      height={40}
+      fill="#F59E0B"
+      stroke="#F59E0B"
+      strokeWidth={1}
+      strokeDasharray="4 4"
+    />
+    
+    {isLayerVisible("dimensions") && (
+      <>
+        <text
+          x={usableRoom.x + 8}
+          y={(screenY + firstRowY) / 2}
+          fontSize="7"
+          fill="#F59E0B"
+          fontWeight="600"
+        >
+          1st
+        </text>
+        <text
+          x={usableRoomRight - 20}
+          y={(screenY + firstRowY) / 2}
+          fontSize="7"
+          fill="#F59E0B"
+          fontWeight="600"
+        >
+          1st
+        </text>
+      </>
+    )}
+  </g>
+)}
+
+{/* ================= END VISUAL RENDERING ================= */}
+
     </svg>
   ) : (
     <div
@@ -6936,9 +7218,20 @@ Ceiling: {CEILING_ACOUSTIC_DEPTH_IN}"
         justifyContent: "center",
         fontSize: "13px",
         opacity: 0.6,
+        flexDirection: "column",
+        gap: "8px",
       }}
     >
-      Enter room dimensions to see visualization
+      {!hasValidDimensions ? (
+        <span>📐 Enter room dimensions first</span>
+      ) : (
+        <>
+          <span>👆 Click "Apply & Show Results" button</span>
+          <span style={{ fontSize: "11px", opacity: 0.7 }}>
+            (Button is in the left panel)
+          </span>
+        </>
+      )}
     </div>
   )}
 
@@ -8012,19 +8305,63 @@ Ceiling: {CEILING_ACOUSTIC_DEPTH_IN}"
 
 {hasValidDimensions && (
   <>
+    {exportError && (
+      <div
+        style={{
+          background: "#7F1D1D",
+          border: "1px solid #DC2626",
+          borderRadius: "6px",
+          padding: "10px",
+          fontSize: "12px",
+          color: "#FEE2E2",
+          marginTop: "10px",
+        }}
+      >
+        <strong>Export Error: </strong>
+        {exportError}
+      </div>
+    )}
+    
     <button
       onClick={handleExportPDF}
-      disabled={!hasValidDimensions}
+      disabled={!hasValidDimensions || isExportingPDF}
       style={{
         width: "100%",
         padding: "12px",
-        background: hasValidDimensions ? "#22C55E" : "#334155",
-        color: hasValidDimensions ? "#022c22" : "#94A3B8",
+        background: isExportingPDF 
+          ? "#94A3B8" 
+          : hasValidDimensions 
+            ? "#22C55E" 
+            : "#334155",
+        color: isExportingPDF || !hasValidDimensions ? "#020617" : "#022c22",
         fontWeight: 700,
-        cursor: hasValidDimensions ? "pointer" : "not-allowed",
+        cursor: isExportingPDF 
+          ? "wait" 
+          : hasValidDimensions 
+            ? "pointer" 
+            : "not-allowed",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px",
       }}
     >
-      Export PDF
+      {isExportingPDF ? (
+        <>
+          <span style={{ 
+            display: "inline-block",
+            width: "14px",
+            height: "14px",
+            border: "2px solid #020617",
+            borderTopColor: "transparent",
+            borderRadius: "50%",
+            animation: "spin 0.8s linear infinite",
+          }} />
+          Exporting PDF...
+        </>
+      ) : (
+        "Export PDF"
+      )}
     </button>
   </>
 )}

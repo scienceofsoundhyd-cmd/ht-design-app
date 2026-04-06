@@ -36,9 +36,9 @@ export type RoomMode = {
  * Determines whether a mode is axial, tangential, or oblique based on
  * how many of its three modal indices are non-zero.
  *
- * @param nx - Modal index along the width axis.
- * @param ny - Modal index along the height axis.
- * @param nz - Modal index along the length axis.
+ * @param nx - Modal index along the width axis (X).
+ * @param ny - Modal index along the length axis (Y).
+ * @param nz - Modal index along the height axis (Z).
  * @returns The mode type string.
  */
 function classifyModeType(
@@ -59,17 +59,17 @@ function classifyModeType(
  * Computes the resonant frequency of a rectangular room mode using the
  * three-dimensional wave equation solution for a rigid-walled enclosure:
  *
- *   f = (c / 2) × √((nx/W)² + (ny/H)² + (nz/L)²)
+ *   f = (c / 2) × √((nx/W)² + (ny/L)² + (nz/H)²)
  *
  * Where:
  *   c   = speed of sound (m/s), derived from ambient temperature
- *   nx  = modal index along width  W (m)
- *   ny  = modal index along height H (m)
- *   nz  = modal index along length L (m)
+ *   nx  = modal index along width  W (m)  — X axis
+ *   ny  = modal index along length L (m)  — Y axis
+ *   nz  = modal index along height H (m)  — Z axis
  *
- * @param nx   - Modal index along the width axis.
- * @param ny   - Modal index along the height axis.
- * @param nz   - Modal index along the length axis.
+ * @param nx   - Modal index along the width axis (X).
+ * @param ny   - Modal index along the length axis (Y).
+ * @param nz   - Modal index along the height axis (Z).
  * @param room - Room providing the three principal dimensions.
  * @returns Resonant frequency in Hz.
  */
@@ -84,8 +84,8 @@ function computeModeFrequency(
     (c / 2) *
     Math.sqrt(
       (nx / room.width) * (nx / room.width) +
-        (ny / room.height) * (ny / room.height) +
-        (nz / room.length) * (nz / room.length)
+        (ny / room.length) * (ny / room.length) +
+        (nz / room.height) * (nz / room.height)
     )
   );
 }
@@ -103,9 +103,9 @@ function computeModeFrequency(
  * There are three families of axial modes — one per room axis — each
  * producing harmonics at integer multiples of the fundamental:
  *
- *   f_nx = (c / 2) × (nx / W)   — width axis
- *   f_ny = (c / 2) × (ny / H)   — height axis
- *   f_nz = (c / 2) × (nz / L)   — length axis
+ *   f_nx = (c / 2) × (nx / W)   — width axis (X)
+ *   f_ny = (c / 2) × (ny / L)   — length axis (Y)
+ *   f_nz = (c / 2) × (nz / H)   — height axis (Z)
  *
  * Iteration continues per axis until the next mode would exceed
  * the specified upper frequency limit.
@@ -153,7 +153,7 @@ export function computeAxialModes(
  * The general solution to the wave equation in a rigid rectangular enclosure
  * yields resonant frequencies at:
  *
- *   f = (c / 2) × √((nx/W)² + (ny/H)² + (nz/L)²)
+ *   f = (c / 2) × √((nx/W)² + (ny/L)² + (nz/H)²)
  *
  * for all non-negative integer triples (nx, ny, nz) excluding (0, 0, 0),
  * which represents the trivial DC solution (no standing wave).
@@ -180,8 +180,8 @@ export function computeAllRoomModes(
   const c = computeSpeedOfSound(DEFAULT_ACOUSTIC_CONFIG.temperatureCelsius);
 
   const maxNx = Math.ceil((2 * maxFrequencyHz * room.width) / c);
-  const maxNy = Math.ceil((2 * maxFrequencyHz * room.height) / c);
-  const maxNz = Math.ceil((2 * maxFrequencyHz * room.length) / c);
+  const maxNy = Math.ceil((2 * maxFrequencyHz * room.length) / c);
+  const maxNz = Math.ceil((2 * maxFrequencyHz * room.height) / c);
 
   for (let nx = 0; nx <= maxNx; nx++) {
     for (let ny = 0; ny <= maxNy; ny++) {

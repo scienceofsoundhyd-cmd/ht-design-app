@@ -75,6 +75,31 @@ export type ConsultationPayload = {
   totalRiseM?: number;
 
   timestamp: string;
+
+  // Material Specification + BOQ
+  materialSpecs?: {
+    surface: string;
+    panelName: string;
+    panelType: string;
+    nrc: number;
+    frame: string;
+    layers: { material: string; thickness: string; purpose: string }[];
+  }[];
+  boqSurfaces?: {
+    surface: string;
+    coveredAreaM2: number;
+    panelCount: number;
+    frameLengthM: number;
+    insulationAreaM2: number;
+  }[];
+  boqTotals?: {
+    totalPanels: number;
+    totalFrameM: number;
+    totalInsulationM2: number;
+    totalCoveredM2: number;
+  };
+  boqCoveragePct?: number;
+  boqPanelSize?: string;
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -210,10 +235,30 @@ const S = StyleSheet.create({
   pillRed:    { backgroundColor: "#FAE8E8", borderRadius: 3, paddingHorizontal: 6, paddingVertical: 2 },
   pillText:   { fontSize: 9, fontFamily: "Helvetica-Bold" },
 
-  // Page 2 header
+  // Page 2+ header
   page2Header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
   page2Title:  { fontSize: 10, color: "#2C4A7C", fontFamily: "Helvetica-Bold", letterSpacing: 1, textTransform: "uppercase" },
   page2Sub:    { fontSize: 9, color: "#AAAAAA" },
+
+  // BOQ / Material table styles
+  matSurface:   { marginBottom: 12 },
+  matSurfHead:  { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+  matSurfName:  { fontSize: 10, color: "#1A1A1A", fontFamily: "Helvetica-Bold" },
+  matBadge:     { fontSize: 7, fontFamily: "Helvetica-Bold", letterSpacing: 1, textTransform: "uppercase", borderRadius: 2, paddingHorizontal: 4, paddingVertical: 1 },
+  matNrc:       { fontSize: 8, color: "#2C4A7C", fontFamily: "Helvetica-Bold", marginLeft: "auto" },
+  matFrame:     { fontSize: 8, color: "#777777", marginBottom: 2, paddingLeft: 8 },
+  matLayer:     { flexDirection: "row", paddingLeft: 8, paddingVertical: 1.5 },
+  matLayerText: { fontSize: 8, color: "#444444" },
+  matLayerDim:  { fontSize: 8, color: "#AAAAAA", marginLeft: 4 },
+  matLayerPurp: { fontSize: 8, color: "#999999", marginLeft: 4 },
+
+  boqHeader:    { flexDirection: "row", backgroundColor: "#2C4A7C", borderRadius: 3, paddingVertical: 5, paddingHorizontal: 8, marginBottom: 2 },
+  boqHeaderCell:{ fontSize: 7, color: "#FFFFFF", fontFamily: "Helvetica-Bold", letterSpacing: 0.3, textTransform: "uppercase" },
+  boqRow:       { flexDirection: "row", paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: "#F0EDE8" },
+  boqCell:      { fontSize: 9, color: "#1A1A1A" },
+  boqCellBold:  { fontSize: 9, color: "#1A1A1A", fontFamily: "Helvetica-Bold" },
+  boqTotalRow:  { flexDirection: "row", paddingVertical: 6, paddingHorizontal: 8, backgroundColor: "#EDF3FA", borderRadius: 3, marginTop: 2 },
+  boqTotalCell: { fontSize: 9, color: "#2C4A7C", fontFamily: "Helvetica-Bold" },
 });
 
 // ── Row builders ──────────────────────────────────────────────────────────────
@@ -400,7 +445,7 @@ export function buildDocument(p: ConsultationPayload): React.ReactElement<React.
         React.createElement(Text, { style: S.footerSub },    "Physics-grade modal simulation · Engine V2"),
       ),
       React.createElement(View, { style: S.footerRight },
-        React.createElement(Text, { style: S.footerDisclaimer }, "Page 1 of 2 · For professional use only."),
+        React.createElement(Text, { style: S.footerDisclaimer }, `Page 1 of ${p.materialSpecs ? 3 : 2} · For professional use only.`),
       ),
     ),
 
@@ -490,18 +535,120 @@ export function buildDocument(p: ConsultationPayload): React.ReactElement<React.
         React.createElement(Text, { style: S.footerSub },    "Physics-grade modal simulation · Engine V2"),
       ),
       React.createElement(View, { style: S.footerRight },
-        React.createElement(Text, { style: S.footerDisclaimer }, "Page 2 of 2 · Results are simulation estimates only."),
+        React.createElement(Text, { style: S.footerDisclaimer }, `Page 2 of ${p.materialSpecs ? 3 : 2} · Results are simulation estimates only.`),
       ),
     ),
 
     React.createElement(View, { style: S.bottomBar }),
   );
 
+  // ── Page 3 — Material Specification + BOQ Appendix (conditional) ───────────
+  const page3 = (p.materialSpecs && p.boqSurfaces && p.boqTotals) ? React.createElement(
+    Page, { size: "A4" as const, style: S.page },
+
+    React.createElement(View, { style: S.topBar }),
+
+    React.createElement(View, { style: S.page2Header },
+      React.createElement(Text, { style: S.page2Title }, "Material Specification & Bill of Quantities"),
+      React.createElement(Text, { style: S.page2Sub }, formattedDate),
+    ),
+
+    React.createElement(View, { style: S.rule }),
+
+    // Material Specification — per surface with layer stack
+    React.createElement(View, { style: S.sectionBlock },
+      sectionHead("Material Specification — Construction Stack"),
+      ...p.materialSpecs.map((mat, i) => {
+        const badgeColors: Record<string, { bg: string; fg: string }> = {
+          absorber: { bg: "#E8F0FE", fg: "#2C4A7C" },
+          diffuser: { bg: "#F3E8FE", fg: "#6B21A8" },
+          reflector: { bg: "#FEF3E2", fg: "#92400E" },
+          bastrap: { bg: "#FEE2E2", fg: "#991B1B" },
+          bare: { bg: "#F0EDE8", fg: "#777777" },
+          floor: { bg: "#F0EDE8", fg: "#555555" },
+        };
+        const bc = badgeColors[mat.panelType] ?? badgeColors.bare;
+        return React.createElement(View, { key: String(i), style: S.matSurface },
+          // Surface header
+          React.createElement(View, { style: S.matSurfHead },
+            React.createElement(Text, { style: S.matSurfName }, mat.surface),
+            React.createElement(Text, { style: [S.matBadge, { backgroundColor: bc.bg, color: bc.fg }] }, mat.panelType.toUpperCase()),
+            React.createElement(Text, { style: S.matNrc }, mat.nrc > 0 ? `NRC ${mat.nrc.toFixed(2)}` : ""),
+          ),
+          // Panel name
+          React.createElement(Text, { style: { fontSize: 9, color: "#444444", marginBottom: 2 } }, mat.panelName),
+          // Frame
+          ...(mat.frame !== "—" ? [
+            React.createElement(Text, { key: "frame", style: S.matFrame }, `Frame: ${mat.frame}`),
+          ] : []),
+          // Layers
+          ...mat.layers.map((layer, j) =>
+            React.createElement(View, { key: String(j), style: S.matLayer },
+              React.createElement(Text, { style: S.matLayerText }, `${j === mat.layers.length - 1 ? "└" : "├"} ${layer.material}`),
+              React.createElement(Text, { style: S.matLayerDim }, layer.thickness),
+              React.createElement(Text, { style: S.matLayerPurp }, `— ${layer.purpose}`),
+            )
+          ),
+        );
+      }),
+    ),
+
+    React.createElement(View, { style: S.rule }),
+
+    // BOQ Table
+    React.createElement(View, { style: S.sectionBlock },
+      sectionHead("Bill of Quantities"),
+      React.createElement(Text, { style: { fontSize: 8, color: "#777777", marginBottom: 6 } },
+        `Panel size: ${p.boqPanelSize ?? "2\' × 2\'"} · Coverage: ${p.boqCoveragePct ?? 0}%`
+      ),
+      // Table header
+      React.createElement(View, { style: S.boqHeader },
+        React.createElement(Text, { style: [S.boqHeaderCell, { flex: 2 }] }, "Surface"),
+        React.createElement(Text, { style: [S.boqHeaderCell, { flex: 1, textAlign: "right" }] }, "Area m²"),
+        React.createElement(Text, { style: [S.boqHeaderCell, { flex: 1, textAlign: "right" }] }, "Panels"),
+        React.createElement(Text, { style: [S.boqHeaderCell, { flex: 1, textAlign: "right" }] }, "Frame m"),
+        React.createElement(Text, { style: [S.boqHeaderCell, { flex: 1, textAlign: "right" }] }, "Insul. m²"),
+      ),
+      // Data rows
+      ...p.boqSurfaces.map((row, i) =>
+        React.createElement(View, { key: String(i), style: [S.boqRow, ...(i % 2 === 1 ? [S.tableRowAlt] : [])] },
+          React.createElement(Text, { style: [S.boqCell, { flex: 2 }] }, row.surface),
+          React.createElement(Text, { style: [S.boqCell, { flex: 1, textAlign: "right" }] }, row.coveredAreaM2.toFixed(1)),
+          React.createElement(Text, { style: [S.boqCellBold, { flex: 1, textAlign: "right" }] }, row.panelCount > 0 ? String(row.panelCount) : "—"),
+          React.createElement(Text, { style: [S.boqCell, { flex: 1, textAlign: "right" }] }, row.frameLengthM > 0 ? row.frameLengthM.toFixed(1) : "—"),
+          React.createElement(Text, { style: [S.boqCell, { flex: 1, textAlign: "right" }] }, row.insulationAreaM2 > 0 ? row.insulationAreaM2.toFixed(1) : "—"),
+        )
+      ),
+      // Totals row
+      React.createElement(View, { style: S.boqTotalRow },
+        React.createElement(Text, { style: [S.boqTotalCell, { flex: 2 }] }, "TOTAL"),
+        React.createElement(Text, { style: [S.boqTotalCell, { flex: 1, textAlign: "right" }] }, p.boqTotals.totalCoveredM2.toFixed(1)),
+        React.createElement(Text, { style: [S.boqTotalCell, { flex: 1, textAlign: "right" }] }, String(p.boqTotals.totalPanels)),
+        React.createElement(Text, { style: [S.boqTotalCell, { flex: 1, textAlign: "right" }] }, p.boqTotals.totalFrameM.toFixed(1)),
+        React.createElement(Text, { style: [S.boqTotalCell, { flex: 1, textAlign: "right" }] }, p.boqTotals.totalInsulationM2.toFixed(1)),
+      ),
+    ),
+
+    // Footer
+    React.createElement(View, { style: S.footer },
+      React.createElement(View, { style: S.footerLeft },
+        React.createElement(Text, { style: S.footerEngine }, "Generated by Science of Sound Acoustic Engine"),
+        React.createElement(Text, { style: S.footerSub },    "Material specification for procurement · Engine V2"),
+      ),
+      React.createElement(View, { style: S.footerRight },
+        React.createElement(Text, { style: S.footerDisclaimer }, "Page 3 of 3 · BOQ is an estimate — verify on site."),
+      ),
+    ),
+
+    React.createElement(View, { style: S.bottomBar }),
+  ) : null;
+
   return React.createElement(
     Document,
     { title: "Acoustic Performance Report", author: "Science of Sound" },
     page1,
     page2,
+    ...(page3 ? [page3] : []),
   ) as React.ReactElement<React.ComponentProps<typeof Document>>;
 }
 

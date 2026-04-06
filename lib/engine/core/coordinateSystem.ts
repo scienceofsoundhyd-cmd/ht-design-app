@@ -23,35 +23,35 @@
  *   X = room width is the right wall.
  *   Moving right increases X.
  *
- *   Y axis — Height direction.
- *   Extends from the floor toward the ceiling.
- *   Y = 0 is the floor.
- *   Y = room height is the ceiling.
- *   Moving upward increases Y.
- *
- *   Z axis — Depth direction.
+ *   Y axis — Length direction (depth into the room).
  *   Extends from the front wall toward the back wall.
- *   Z = 0 is the front wall.
- *   Z = room length is the back wall.
- *   Moving deeper into the room increases Z.
+ *   Y = 0 is the front wall (where the screen is).
+ *   Y = room length is the back wall.
+ *   Moving deeper into the room increases Y.
+ *
+ *   Z axis — Height direction.
+ *   Extends from the floor toward the ceiling.
+ *   Z = 0 is the floor.
+ *   Z = room height is the ceiling.
+ *   Moving upward increases Z.
  *
  * Visual diagram (top-down view):
  *
- *   (0,y,0) ←── front-left     front-right ──→ (W,y,0)
- *      │  FRONT WALL                                │
+ *   (0,0,z) ←── front-left     front-right ──→ (W,0,z)
+ *      │  FRONT WALL (screen)                       │
  *      │                                            │
- *      │  Z increases going into the page (depth)   │
+ *      │  Y increases going into the page (depth)   │
  *      │                                            │
  *      │  BACK WALL                                 │
- *   (0,y,L) ←── back-left       back-right ──→ (W,y,L)
+ *   (0,L,z) ←── back-left       back-right ──→ (W,L,z)
  *
  * Visual diagram (side view, left wall):
  *
- *   (0,H,z) ──→ ceiling
+ *   (0,y,H) ──→ ceiling
  *      │
- *      │  Y increases going up
+ *      │  Z increases going up
  *      │
- *   (0,0,z) ──→ floor
+ *   (0,y,0) ──→ floor
  *
  * ─────────────────────────────────────────────────────────
  * WHY THIS SPECIFIC ORIGIN?
@@ -97,14 +97,14 @@
  *
  * All values are in meters.
  *
- *   x — distance from the left wall (0 = left wall)
- *   y — distance from the floor    (0 = floor)
- *   z — distance from the front wall (0 = front wall)
+ *   x — distance from the left wall  (0 = left wall)
+ *   y — distance from the front wall (0 = front wall / screen)
+ *   z — distance from the floor      (0 = floor)
  *
- * Examples of valid points inside a 6m × 3m × 8m room:
- *   { x: 3,   y: 1.2, z: 4   }  ← center of room at ear height
- *   { x: 0.5, y: 0,   z: 0.5 }  ← near the front-left floor corner
- *   { x: 6,   y: 3,   z: 8   }  ← the back-right ceiling corner exactly
+ * Examples of valid points inside a 6m wide × 8m long × 3m tall room:
+ *   { x: 3,   y: 4,   z: 1.2 }  ← center of room at ear height
+ *   { x: 0.5, y: 0.5, z: 0   }  ← near the front-left floor corner
+ *   { x: 6,   y: 8,   z: 3   }  ← the back-right ceiling corner exactly
  */
 export type Point3D = {
   x: number
@@ -118,8 +118,8 @@ export type Point3D = {
  * All values are in meters.
  *
  *   width  — distance between the left wall and the right wall (X span)
- *   height — distance between the floor and the ceiling (Y span)
- *   length — distance between the front wall and the back wall (Z span)
+ *   height — distance between the floor and the ceiling (Z span)
+ *   length — distance between the front wall and the back wall (Y span)
  *
  * RoomBounds defines the valid region of space.
  * Any Point3D whose coordinates fall within [0, dimension]
@@ -152,8 +152,8 @@ export type RoomBounds = {
  * edge on each axis.
  *
  *   X: minimum = 0 (left wall),  maximum = width  (right wall)
- *   Y: minimum = 0 (floor),      maximum = height (ceiling)
- *   Z: minimum = 0 (front wall), maximum = length (back wall)
+ *   Y: minimum = 0 (front wall), maximum = length (back wall)
+ *   Z: minimum = 0 (floor),      maximum = height (ceiling)
  *
  * Bounds checking asks: does this point's coordinate on each
  * axis fall between the minimum and maximum for that axis?
@@ -162,11 +162,11 @@ export type RoomBounds = {
  *
  * Real example — room is 6m wide, 3m tall, 8m deep:
  *
- *   { x: 3,  y: 1.5, z: 4   }  ✓  inside  (3≤6, 1.5≤3, 4≤8)
- *   { x: 7,  y: 1.5, z: 4   }  ✗  outside (7 > width of 6)
- *   { x: 3,  y: -0.1, z: 4  }  ✗  outside (y below the floor)
+ *   { x: 3,  y: 4,   z: 1.5 }  ✓  inside  (3≤6, 4≤8, 1.5≤3)
+ *   { x: 7,  y: 4,   z: 1.5 }  ✗  outside (7 > width of 6)
+ *   { x: 3,  y: 4,   z: -0.1}  ✗  outside (z below the floor)
  *   { x: 0,  y: 0,   z: 0   }  ✓  on the boundary (valid)
- *   { x: 6,  y: 3,   z: 8   }  ✓  on the boundary (valid)
+ *   { x: 6,  y: 8,   z: 3   }  ✓  on the boundary (valid)
  *
  * Boundary points (exactly on a wall, floor, or ceiling) are
  * considered valid. A speaker mounted flush against a wall is
@@ -205,7 +205,7 @@ export function validatePointInsideRoom(
 ): boolean {
   return (
     point.x >= 0 && point.x <= bounds.width  &&
-    point.y >= 0 && point.y <= bounds.height &&
-    point.z >= 0 && point.z <= bounds.length
+    point.y >= 0 && point.y <= bounds.length &&
+    point.z >= 0 && point.z <= bounds.height
   )
 }

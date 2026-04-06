@@ -10,7 +10,9 @@ import {
   AxialMode,
   PhaseAlignment,
   SpeakerSystemType,
+  RoomGeometry,
 } from "./types";
+import { buildRoomGeometry } from "./buildRoomGeometry";
 
 // ── Exported config types ─────────────────────────────────────────────────────
 export type LCRMode     = "stereo" | "lcr";
@@ -26,6 +28,7 @@ export type SpeakerConfig = {
 // ── Scene output type ─────────────────────────────────────────────────────────
 export type AcousticScene = {
   room:             Room;
+  geometry:         RoomGeometry;       // full three-stage pipeline
   objects:          SceneObject[];
   speakers:         Speaker[];
   listeners:        Seat[];
@@ -119,15 +122,23 @@ export function buildScene(
   } = { count: 1, placement: "frontWall", enclosure: "sealed" },
 ): AcousticScene {
 
-  // ── Room ───────────────────────────────────────────────────────────────────
+  // ── Room + Geometry Pipeline ──────────────────────────────────────────────
   const room: Room = {
     width:  roomDims.width,
     length: roomDims.length,
     height: roomDims.height,
   };
   const { width, length, height } = room;
-  const volume = width * length * height;
   const rt60   = 0.4;
+
+  // Build three-stage geometry pipeline (Raw → Acoustic → Usable)
+  const geometry = buildRoomGeometry({
+    width,
+    length,
+    height,
+    rt60,
+  });
+  const volume = geometry.raw.volume;
 
   // ── Layout constants ────────────────────────────────────────────────────────
   const SIDE_CLEARANCE    = 0.30;
@@ -308,6 +319,7 @@ export function buildScene(
 
   return {
     room,
+    geometry,
     objects,
     speakers,
     listeners,

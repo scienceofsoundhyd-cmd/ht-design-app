@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { buildScene } from "@/lib/engine/core/sceneBuilder";
+import { buildScene, SpeakerConfig } from "@/lib/engine/core/sceneBuilder";
 import { ViewingStandard } from "@/lib/engine/core/screen";
 import { SpeakerSystemType } from "@/lib/engine/core/types";
 
 const VIEWING_STANDARDS: ViewingStandard[] = ["THX", "SMPTE"];
 const SYSTEM_TYPES: SpeakerSystemType[] = ["5.1", "7.1", "7.1.4"];
+
+const SYSTEM_TYPE_TO_CONFIG: Record<SpeakerSystemType, SpeakerConfig> = {
+  "5.1":   { lcr: "lcr", surrounds: "side",      ceilingCount: 0 },
+  "7.1":   { lcr: "lcr", surrounds: "side_rear",  ceilingCount: 0 },
+  "7.1.4": { lcr: "lcr", surrounds: "side_rear",  ceilingCount: 4 },
+};
 
 const CANVAS_W = 600;
 const CANVAS_H = 480;
@@ -16,7 +22,7 @@ export default function DesignEnginePage() {
   const [systemType, setSystemType] = useState<SpeakerSystemType>("5.1");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const scene = buildScene(standard, systemType);
+  const scene = buildScene(standard, SYSTEM_TYPE_TO_CONFIG[systemType]);
 
   const roomW = scene.room.width;
   const roomL = scene.room.length;

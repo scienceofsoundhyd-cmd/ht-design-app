@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import type { Speaker } from '@/lib/engine/core/types'
-import type { PanelLayout, PanelType, AcousticPanelZone, PanelSurface, WallZone } from '@/lib/engine/acoustics/panelEngine'
+import type { PanelLayout, PanelSurface, WallZone } from '@/lib/engine/acoustics/panelEngine'
 
 export interface TheatreView3DProps {
   room:                  { width: number; length: number; height: number }
@@ -35,6 +35,8 @@ export interface TheatreView3DProps {
   wallConstruction:      string   // 'drywall' | 'concrete' | 'timber' | 'brick' | 'mixed'
   aisleConfig:           string   // 'none' | 'left' | 'center' | 'right' | 'both'
   aisleWidthM:           number   // metres
+  lightingZones?:        Record<string, { enabled: boolean; fixtureType: string; colorTempK: number; dimmable: boolean }>
+  lightingSceneBrightness?: { screenWash: number; ceilingCove: number; aisleStep: number; wallSconces: number; starCeiling: number; entryFoyer: number; equipmentRack: number }
 }
 
 // ── Ghost material — transparent back-face, singleton ─────────────────────────
@@ -50,29 +52,20 @@ type MatFlags = {
   bassTraps: boolean; slats: boolean; slatsCeiling: boolean; frp: boolean
 }
 const MATERIAL_MATRIX: Record<string, Record<string, MatFlags>> = {
-  none: {
-    dialogue: { absorbers:false, reflectors:false, diffusers:false, bassTraps:false, slats:false, slatsCeiling:false, frp:false },
-    cinematic:{ absorbers:false, reflectors:false, diffusers:false, bassTraps:false, slats:false, slatsCeiling:false, frp:false },
-    hybrid:   { absorbers:false, reflectors:false, diffusers:false, bassTraps:false, slats:false, slatsCeiling:false, frp:false },
-    music:    { absorbers:false, reflectors:false, diffusers:false, bassTraps:false, slats:false, slatsCeiling:false, frp:false },
-  },
   basic: {
-    dialogue: { absorbers:true,  reflectors:false, diffusers:false, bassTraps:false, slats:false, slatsCeiling:false, frp:false },
-    cinematic:{ absorbers:true,  reflectors:false, diffusers:false, bassTraps:false, slats:false, slatsCeiling:false, frp:false },
-    hybrid:   { absorbers:true,  reflectors:false, diffusers:false, bassTraps:false, slats:true,  slatsCeiling:false, frp:false },
-    music:    { absorbers:true,  reflectors:false, diffusers:false, bassTraps:false, slats:true,  slatsCeiling:true,  frp:true  },
+    performance:{ absorbers:true,  reflectors:false, diffusers:false, bassTraps:false, slats:false, slatsCeiling:false, frp:false },
+    balanced:   { absorbers:true,  reflectors:false, diffusers:false, bassTraps:false, slats:false, slatsCeiling:false, frp:false },
+    luxury:     { absorbers:true,  reflectors:false, diffusers:false, bassTraps:false, slats:true,  slatsCeiling:false, frp:false },
   },
-  standard: {
-    dialogue: { absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:false, slats:false, slatsCeiling:false, frp:false },
-    cinematic:{ absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:false, slats:false, slatsCeiling:false, frp:true  },
-    hybrid:   { absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:false, slats:true,  slatsCeiling:false, frp:true  },
-    music:    { absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:false, slats:true,  slatsCeiling:true,  frp:true  },
+  medium: {
+    performance:{ absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:false, slats:false, slatsCeiling:false, frp:false },
+    balanced:   { absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:false, slats:false, slatsCeiling:false, frp:true  },
+    luxury:     { absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:false, slats:true,  slatsCeiling:false, frp:true  },
   },
-  studio: {
-    dialogue: { absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:true,  slats:false, slatsCeiling:false, frp:false },
-    cinematic:{ absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:true,  slats:false, slatsCeiling:false, frp:true  },
-    hybrid:   { absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:true,  slats:true,  slatsCeiling:false, frp:true  },
-    music:    { absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:true,  slats:true,  slatsCeiling:true,  frp:true  },
+  high: {
+    performance:{ absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:true,  slats:false, slatsCeiling:false, frp:false },
+    balanced:   { absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:true,  slats:false, slatsCeiling:false, frp:true  },
+    luxury:     { absorbers:true,  reflectors:true,  diffusers:true,  bassTraps:true,  slats:true,  slatsCeiling:false, frp:true  },
   },
 }
 /** Safe lookup — falls back to all-false if level/intent not found */
@@ -149,11 +142,6 @@ function surfaceMats(mat: THREE.Material, surface: string): THREE.Material[] {
   const vis = ROOM_FACE[surface] ?? -1
   return [0,1,2,3,4,5].map(i => i === vis ? mat : GHOST)
 }
-/** Diffuser blocks/fins live in a group rotated 180°y — local +Z (index 4) becomes world room-facing. */
-function diffuserFaceMats(mat: THREE.Material): THREE.Material[] {
-  return [GHOST, GHOST, GHOST, GHOST, mat, GHOST]
-}
-
 // ── World-space absorber panel renderer ──────────────────────────────────────
 // All surfaces: solid FrontSide tiles — visible from inside room only.
 // FrontSide = naturally invisible from outside/behind — no extra transparency needed.
@@ -218,74 +206,6 @@ function makeBassTrapMesh(
   return new THREE.Mesh(geo,
     new THREE.MeshStandardMaterial({ color: 0x141c28, roughness: 0.98, metalness: 0.00, side: THREE.FrontSide })
   )
-}
-
-// ── Skyline diffuser (for cinematic / hybrid designIntent) ────────────────────
-// QRD-style: base slab + random-height rectangular columns on front face.
-// width / height = wall dims, depth = total max depth (base + tallest block).
-function makeSkylineDiffuser(width: number, height: number, depth: number, baseColor = 0x141414, blockColor = 0x1a1a1a): THREE.Group {
-  const g = new THREE.Group()
-  if (depth < 0.01) return g
-
-  const baseD   = depth * 0.30                // base slab depth
-  const maxColD = depth * 0.70                // max column protrusion
-  const COL_W   = 0.08, GAP = 0.02
-  const cols     = Math.max(3, Math.floor(width  / (COL_W + GAP)))
-  const rows     = Math.max(2, Math.floor(height / (COL_W + GAP)))
-  const cW       = (width  - (cols - 1) * GAP) / cols
-  const cH       = (height - (rows - 1) * GAP) / rows
-
-  // Base slab — faces room (+Z)
-  const diffBaseMat = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.68, metalness: 0.02, side: THREE.DoubleSide })
-  const baseMats = boxMats(diffBaseMat, 'z')  // ghost -Z local face → world +Z after rot.y=PI = outward/back face
-  const baseMesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, baseD), baseMats)
-  baseMesh.position.set(width / 2, height / 2, -baseD / 2)   // negative Z = into wall
-  g.add(baseMesh)
-
-  const blockMat = new THREE.MeshStandardMaterial({ color: blockColor, roughness: 0.52, metalness: 0.04, side: THREE.FrontSide })
-  // Deterministic pseudo-random height per cell
-  for (let c = 0; c < cols; c++) {
-    for (let r = 0; r < rows; r++) {
-      const seed   = ((c * 7 + r * 13) % 17) / 17
-      const colD   = maxColD * (0.15 + seed * 0.85)
-      const mesh   = new THREE.Mesh(new THREE.BoxGeometry(cW, cH, colD), diffuserFaceMats(blockMat))
-      mesh.position.set(
-        c * (cW + GAP) + cW / 2,
-        r * (cH + GAP) + cH / 2,
-        colD / 2,                              // protrudes in +Z (into room)
-      )
-      g.add(mesh)
-    }
-  }
-  return g
-}
-
-// ── Slatted diffuser (for dialogue / music designIntent) ──────────────────────
-// Parallel vertical fins on a base slab.
-function makeSlattedDiffuser(width: number, height: number, depth: number, baseColor = 0x141414, finColor = 0x181818): THREE.Group {
-  const g = new THREE.Group()
-  if (depth < 0.01) return g
-
-  const baseD  = depth * 0.35
-  const finD   = depth * 0.65
-  const FIN_W  = 0.05, GAP = 0.04
-  const count  = Math.max(3, Math.floor(width / (FIN_W + GAP)))
-  const fW     = (width - (count - 1) * GAP) / count
-
-  // Base slab
-  const slattedBaseMat = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.68, metalness: 0.02, side: THREE.DoubleSide })
-  const baseMats = boxMats(slattedBaseMat, 'z')  // ghost -Z local face → world +Z after rot.y=PI = outward/back face
-  const base = new THREE.Mesh(new THREE.BoxGeometry(width, height, baseD), baseMats)
-  base.position.set(width / 2, height / 2, -baseD / 2)
-  g.add(base)
-
-  const finMat = new THREE.MeshStandardMaterial({ color: finColor, roughness: 0.54, metalness: 0.03, side: THREE.FrontSide })
-  for (let i = 0; i < count; i++) {
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(fW, height, finD), diffuserFaceMats(finMat))
-    fin.position.set(i * (fW + GAP) + fW / 2, height / 2, finD / 2)
-    g.add(fin)
-  }
-  return g
 }
 
 // ── Speaker cabinet ───────────────────────────────────────────────────────────
@@ -434,15 +354,14 @@ export default function TheatreView3D(props: TheatreView3DProps) {
       speakers, extraSidePairs, extraCeilingPairs,
       subCount, subPlacement, subEnclosure,
       seatingRowCount, seatsPerRow, riserStepM,
-      primaryRow, frontClearance, rowPitchM, usableWidth,
+      primaryRow, rowPitchM, usableWidth,
       designIntent, treatmentLevel,
-      wallConstruction = 'drywall',
       aisleConfig = 'none', aisleWidthM: aisleW = 0,
+      lightingZones, lightingSceneBrightness,
     } = props
 
     // ── Room colour scheme ────────────────────────────────────────────────────
     // User picks one of 5 colour themes from the Room Inputs panel.
-    // designIntent still controls light temperature + rear diffuser type only.
     const COLOR_SCHEMES: Record<string, {
       wall: number; absorber: number; seat: number; legs: number; floor: number
       diffBase: number; diffBlock: number; diffFin: number; frpAccent: number
@@ -474,59 +393,40 @@ export default function TheatreView3D(props: TheatreView3DProps) {
     }
     const cs = COLOR_SCHEMES[props.roomColorScheme] ?? COLOR_SCHEMES.obsidian
 
-    // Light temperature driven by designIntent
-    const LIGHT_K: Record<string, { k: number; dim: number }> = {
-      cinematic: { k: 0xFFECD0, dim: 0xFFF0DC },   // 4500K cool white — clinical accuracy
-      hybrid:    { k: 0xFFB56B, dim: 0xFFC882 },   // 2800K warm amber — luxury drama
-      dialogue:  { k: 0xFFF4E8, dim: 0xFFF8F0 },   // 5000K near-daylight — performance accuracy
-      music:     { k: 0xFFC87A, dim: 0xFFD090 },   // 3200K warm diffuse — audiophile feel
+    // Light temperature — derived from lighting zones (average of enabled zones) or fallback
+    const kelvinToHex = (k: number): number => {
+      // Approximate blackbody color for 2000K–7000K range
+      const t = k / 100
+      let r: number, g: number, b: number
+      if (t <= 66) { r = 255; g = Math.min(255, Math.max(0, 99.4708025861 * Math.log(t) - 161.1195681661)); b = t <= 19 ? 0 : Math.min(255, Math.max(0, 138.5177312231 * Math.log(t - 10) - 305.0447927307)) }
+      else { r = Math.min(255, Math.max(0, 329.698727446 * Math.pow(t - 60, -0.1332047592))); g = Math.min(255, Math.max(0, 288.1221695283 * Math.pow(t - 60, -0.0755148492))); b = 255 }
+      return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b)
     }
-    const lk = LIGHT_K[designIntent] ?? LIGHT_K.cinematic
-
-    // ── Bare wall material — per wallConstruction type (treatmentLevel === 'none') ─
-    // When treated, wallMat is the colour-scheme base. When bare, material physics change.
-    const getBareWallMat = () => {
-      const base = cs.wall
-      switch (wallConstruction) {
-        case 'concrete': return new THREE.MeshStandardMaterial({
-          color: base, roughness: 0.22, metalness: 0.10, side: THREE.FrontSide,
-          // Smooth polished concrete — slightly reflective, low roughness
-        })
-        case 'timber': return new THREE.MeshStandardMaterial({
-          color: base, roughness: 0.94, metalness: 0.00, side: THREE.FrontSide,
-          // Rough wood grain feel — very matte
-        })
-        case 'brick': return new THREE.MeshStandardMaterial({
-          color: base, roughness: 0.97, metalness: 0.00, side: THREE.FrontSide,
-          // Porous masonry — maximum matte
-        })
-        case 'drywall':
-        default: return new THREE.MeshStandardMaterial({
-          color: base, roughness: 0.88, metalness: 0.02, side: THREE.FrontSide,
-          // Standard plasterboard — slightly textured
-        })
-      }
-    }
+    type LZone = { enabled: boolean; fixtureType: string; colorTempK: number; dimmable: boolean }
+    const lz: Record<string, LZone> = lightingZones ?? {}
+    const lb = lightingSceneBrightness ?? { screenWash: 30, ceilingCove: 50, aisleStep: 20, wallSconces: 0, starCeiling: 0, entryFoyer: 30, equipmentRack: 20 }
+    // Compute weighted average color temp from enabled zones
+    const enabledZoneEntries = Object.entries(lz).filter(([, z]) => z.enabled)
+    const avgKelvin = enabledZoneEntries.length > 0
+      ? enabledZoneEntries.reduce((sum, [, z]) => sum + z.colorTempK, 0) / enabledZoneEntries.length
+      : 4000
+    const lightKFromZones = kelvinToHex(avgKelvin)
+    const lightKDimFromZones = kelvinToHex(Math.min(7000, avgKelvin + 400))
+    const LIGHT_K_FALLBACK = { k: 0xFFECD0, dim: 0xFFF0DC }
+    const lk = enabledZoneEntries.length > 0 ? { k: lightKFromZones, dim: lightKDimFromZones } : LIGHT_K_FALLBACK
 
     const absorberMat = new THREE.MeshStandardMaterial({ color: cs.absorber, roughness: 0.97, metalness: 0.00, side: THREE.FrontSide })
-    // Bare walls use material-specific physics; treated walls use colour-scheme base
-    const wallMat = treatmentLevel === 'none'
-      ? getBareWallMat()
-      : new THREE.MeshStandardMaterial({ color: cs.wall, roughness: 0.88, metalness: 0.02, side: THREE.FrontSide })
+    // Treated walls always use colour-scheme base
+    const wallMat = new THREE.MeshStandardMaterial({ color: cs.wall, roughness: 0.88, metalness: 0.02, side: THREE.FrontSide })
     const seatMat     = new THREE.MeshStandardMaterial({ color: cs.seat,     roughness: 0.92, metalness: 0.00, side: THREE.DoubleSide })
     const legsMatT    = new THREE.MeshStandardMaterial({ color: cs.legs,     roughness: 0.68, metalness: 0.32, side: THREE.DoubleSide })
     const floorMat    = new THREE.MeshStandardMaterial({ color: cs.floor,    roughness: 0.98, metalness: 0.00, side: THREE.FrontSide })
     const lightK      = lk.k
     const lightKDim   = lk.dim
-    // Fix: isLuxury checks the actual key 'hybrid' (labelled "Luxury" in UI)
-    const isLuxury    = designIntent === 'hybrid'
+    const isLuxury    = designIntent === 'luxury'
     // ── Matrix flags for this combination ───────────────────────────────────
     const mf = matFlags(treatmentLevel, designIntent)
 
-    const frpAccentMat = new THREE.MeshStandardMaterial({
-      color: cs.frpAccent, roughness: 0.80, metalness: 0.04, side: THREE.FrontSide,
-      emissive: new THREE.Color(cs.frpAccent), emissiveIntensity: 0.40,
-    })
     const diffPal = { diffBase: cs.diffBase, diffBlock: cs.diffBlock, diffFin: cs.diffFin }
 
 
@@ -602,7 +502,8 @@ export default function TheatreView3D(props: TheatreView3DProps) {
     // FRP data is shown in the diagnostics panel only — no 3D geometry rendered.
     // Rendering was removed: the blue accent strips conflicted visually with
     // reflectors and wooden slats (only 2 materials should appear in that zone).
-    const renderFRPMarker = (_zone: WallZone, _surface: PanelSurface): void => { /* no-op */ }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const renderFRPMarker = (_zone: WallZone, _surface: PanelSurface): void => { /* no-op — FRP shown in diagnostics panel only */ }
 
     // ── Luxury brass trim — 4 thin strips framing each absorber zone ──────────
     const addLuxuryTrim = (zone: WallZone, surface: PanelSurface): void => {
@@ -648,8 +549,8 @@ export default function TheatreView3D(props: TheatreView3DProps) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
     renderer.setSize(container.clientWidth, container.clientHeight)
     const rAny = renderer as unknown as Record<string, unknown>
-    if ('outputColorSpace' in rAny)    rAny['outputColorSpace'] = (THREE as any).SRGBColorSpace
-    else if ('outputEncoding' in rAny) rAny['outputEncoding']   = (THREE as any).sRGBEncoding ?? 3001
+    if ('outputColorSpace' in rAny)    rAny['outputColorSpace'] = 'srgb'   // THREE.SRGBColorSpace
+    else if ('outputEncoding' in rAny) rAny['outputEncoding']   = 3001     // THREE.sRGBEncoding (r128)
     renderer.toneMapping         = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.30
     container.appendChild(renderer.domElement)
@@ -684,134 +585,176 @@ export default function TheatreView3D(props: TheatreView3DProps) {
     updateCamRef.current = updateCamera
     updateCamera()
 
-    // ── Lighting — per designIntent ───────────────────────────────────────
-    // dialogue  = Performance: even bright overhead, clinical accuracy
-    // cinematic = Balanced: standard COB + cove + mid-wall profiles
-    // hybrid    = Luxury: dramatic low key, strong screen glow, rich cove
-    // music     = Audiophile: warm side-wall wash, floor bounce, no ceiling spine
+    // ── Lighting — driven by Lighting Design tab zones + scene brightness ──
+    // Zone → 3D fixture mapping:
+    //   screenWash    → bias light behind screen (PointLight)
+    //   ceilingCove   → LED perimeter cove strips + COB downlights
+    //   aisleStep     → step lights recessed into risers
+    //   wallSconces   → mid-wall LED profile strips / sconce point lights
+    //   starCeiling   → ceiling spine LED profiles
+    //   entryFoyer    → rear-wall accent wash + entry area lighting
+    //   equipmentRack → front-wall task light near equipment zone
 
-    const isPerformance = designIntent === 'dialogue'
-    const isCinematic   = designIntent === 'cinematic'
-    const isAudiophile  = designIntent === 'music'
-    // isLuxury already defined above
+    // Keep intent flags for architectural geometry (pilasters, reveals, etc.) only
+    const isCinematic   = designIntent === 'balanced'
 
-    // Ambient + hemisphere — vary intensity per intent
-    scene.add(new THREE.AmbientLight(lightKDim, isPerformance ? 2.0 : isAudiophile ? 1.0 : 1.40))
-    scene.add(new THREE.HemisphereLight(lightK, 0x0d1020, isPerformance ? 1.6 : isAudiophile ? 0.7 : 1.10))
+    // Helper: zone brightness (0–1) from active scene preset
+    const zBri = (zone: string): number => {
+      const val = (lb as Record<string, number>)[zone] ?? 0
+      return val / 100
+    }
+    // Helper: zone color as hex
+    const zCol = (zone: string): number => {
+      const z = lz[zone]
+      return z ? kelvinToHex(z.colorTempK) : lightK
+    }
+    // Helper: is zone active (enabled + brightness > 0)
+    const zOn = (zone: string): boolean => {
+      return !!(lz[zone]?.enabled && zBri(zone) > 0.01)
+    }
 
-    // Key light — position changes per intent
-    const key = new THREE.DirectionalLight(lightK, isPerformance ? 3.0 : isLuxury ? 1.6 : isAudiophile ? 1.2 : 2.20)
-    if (isPerformance) key.position.set(cx, H * 5, cz)                                // directly overhead — flat even
-    else if (isLuxury) key.position.set(cx + W * 0.3, H * 1.8, cz - L * 0.5)         // low front-angled — dramatic
-    else if (isAudiophile) key.position.set(cx - W * 0.8, H * 2.5, L * 0.8)           // side-rear — listening room bounce
-    else key.position.set(cx, H * 3.5, cz - L * 0.2)                                  // cinematic default
-    scene.add(key)
+    // Overall scene brightness — average of all active zones for ambient
+    const totalBri = enabledZoneEntries.length > 0
+      ? enabledZoneEntries.reduce((sum, [key]) => sum + zBri(key), 0) / enabledZoneEntries.length
+      : 0.4 // fallback: moderate ambient
 
-    // Fill light
-    const fill = new THREE.DirectionalLight(lightKDim, isPerformance ? 2.0 : isLuxury ? 0.6 : isAudiophile ? 1.8 : 1.20)
-    if (isPerformance) fill.position.set(cx + W * 0.4, H * 4, cz + L * 0.3)
-    else if (isLuxury) fill.position.set(cx + W * 0.5, H * 1.2, L * 1.2)              // secondary dramatic
-    else if (isAudiophile) fill.position.set(cx + W * 0.8, H * 1.8, L * 0.4)          // warm right-side fill
-    else fill.position.set(cx - W * 0.4, H * 2.0, L * 1.5)
-    scene.add(fill)
+    // Ambient + hemisphere — scales with overall scene brightness
+    scene.add(new THREE.AmbientLight(lightKDim, 0.6 + totalBri * 1.8))
+    scene.add(new THREE.HemisphereLight(lightK, 0x0d1020, 0.5 + totalBri * 1.2))
 
-    // Screen glow — brighter + warmer for luxury, cooler for performance
-    const screenGlowColor     = isPerformance ? 0xE8F4FF : isLuxury ? 0xFFEAC0 : 0xD8EEFF
-    const screenGlowIntensity = isLuxury ? 5.0 : isPerformance ? 2.0 : isAudiophile ? 2.5 : 3.0
-    const screenGlow = new THREE.PointLight(screenGlowColor, screenGlowIntensity, L * 1.2, 1.4)
-    screenGlow.position.set(cx, screenBottomFromFloor + screenHeight * 0.5, acousticDepths.front + 0.6)
-    scene.add(screenGlow)
+    // Key light — neutral overhead, intensity scales with scene
+    const keyLight = new THREE.DirectionalLight(lightK, 1.0 + totalBri * 2.0)
+    keyLight.position.set(cx, H * 3.5, cz - L * 0.2)
+    scene.add(keyLight)
 
-    // COB downlights — performance: dense even grid; luxury: fewer brighter; music: none
+    // Fill light — softer, from rear
+    const fillLight = new THREE.DirectionalLight(lightKDim, 0.5 + totalBri * 1.2)
+    fillLight.position.set(cx - W * 0.4, H * 2.0, L * 1.5)
+    scene.add(fillLight)
+
+    // ── SCREEN WASH ZONE → screen glow bias light ──
+    if (zOn('screenWash')) {
+      const swCol = zCol('screenWash')
+      const swBri = zBri('screenWash')
+      const screenGlow = new THREE.PointLight(swCol, swBri * 5.0, L * 1.2, 1.4)
+      screenGlow.position.set(cx, screenBottomFromFloor + screenHeight * 0.5, acousticDepths.front + 0.6)
+      scene.add(screenGlow)
+    }
+
+    // ── CEILING COVE ZONE → perimeter LED cove + COB downlights ──
     const cobCeilingY = H - dCeiling - 0.02
-    if (!isAudiophile) {
-      const cobCols      = isPerformance ? Math.max(4, Math.round(L / 1.2)) : Math.max(3, Math.round(L / 1.6))
-      const cobXPairs    = isPerformance ? [W*0.20, W*0.40, W*0.60, W*0.80] : [W*0.27, W*0.73]
-      const cobIntensity = isPerformance ? 2.2 : isLuxury ? 4.5 : 3.0
-      const cobRange     = isPerformance ? 4.5 : isLuxury ? 7.0 : 5.5
+    if (zOn('ceilingCove')) {
+      const ccCol = zCol('ceilingCove')
+      const ccBri = zBri('ceilingCove')
+
+      // COB downlights
+      const cobCols    = Math.max(3, Math.round(L / 1.6))
+      const cobXPairs  = [W * 0.27, W * 0.73]
+      const cobIntensity = ccBri * 4.5
+      const cobRange   = 5.5
       for (const cobX of cobXPairs) {
         for (let c = 0; c < cobCols; c++) {
           const cobZ = (c + 0.5) * (L / cobCols)
-          const cob = makeCOB(lightK); cob.position.set(cobX, cobCeilingY, cobZ); scene.add(cob)
-          const pl = new THREE.PointLight(lightK, cobIntensity, cobRange, 1.5)
+          const cob = makeCOB(ccCol); cob.position.set(cobX, cobCeilingY, cobZ); scene.add(cob)
+          const pl = new THREE.PointLight(ccCol, cobIntensity, cobRange, 1.5)
           pl.position.set(cobX, cobCeilingY - 0.06, cobZ); scene.add(pl)
         }
       }
+
+      // Perimeter LED cove strips
+      {
+        const ledY   = H - dCeiling - 0.014
+        const ledInF = Math.max(0.04, dFront + 0.01)
+        const ledInR = Math.max(0.04, dRear  + 0.01)
+        const ledInL = Math.max(0.04, dLeft  + 0.01)
+        const ledInRt= Math.max(0.04, dRight + 0.01)
+        const coveInt   = ccBri * 2.8
+        const coveRange = W * 1.4
+        const addCove = (prof: THREE.Group, plPos: THREE.Vector3, intensity: number, range: number) => {
+          scene.add(prof)
+          const pl = new THREE.PointLight(ccCol, intensity, range, 1.4)
+          pl.position.copy(plPos); scene.add(pl)
+        }
+        const lfP = makeLEDProfile(W - ledInL - ledInRt, 'x', ccCol); lfP.position.set(cx, ledY, ledInF + 0.01)
+        addCove(lfP, new THREE.Vector3(cx, ledY - 0.04, ledInF + 0.02), coveInt, coveRange)
+        const lrP = makeLEDProfile(W - ledInL - ledInRt, 'x', ccCol); lrP.position.set(cx, ledY, L - ledInR - 0.01)
+        addCove(lrP, new THREE.Vector3(cx, ledY - 0.04, L - ledInR - 0.02), coveInt, coveRange)
+        const llP = makeLEDProfile(L - ledInF - ledInR, 'z', ccCol); llP.position.set(ledInL + 0.01, ledY, cz)
+        addCove(llP, new THREE.Vector3(ledInL + 0.02, ledY - 0.04, cz), coveInt * 0.9, L * 0.95)
+        const lrightP = makeLEDProfile(L - ledInF - ledInR, 'z', ccCol); lrightP.position.set(W - ledInRt - 0.01, ledY, cz)
+        addCove(lrightP, new THREE.Vector3(W - ledInRt - 0.02, ledY - 0.04, cz), coveInt * 0.9, L * 0.95)
+      }
     }
 
-    // LED perimeter cove — only after treatment selected; luxury gets stronger glow
-    if (treatmentLevel !== 'none') { // perimeter-cove-start
-    const ledY   = H - dCeiling - 0.014
-    const ledInF = Math.max(0.04, dFront + 0.01)
-    const ledInR = Math.max(0.04, dRear  + 0.01)
-    const ledInL = Math.max(0.04, dLeft  + 0.01)
-    const ledInRt= Math.max(0.04, dRight + 0.01)
-    const coveInt   = isLuxury ? 2.8 : isAudiophile ? 1.2 : 1.80
-    const coveRange = isLuxury ? W * 1.6 : W * 1.2
-    const addCove = (prof: THREE.Group, plPos: THREE.Vector3, intensity: number, range: number) => {
-      scene.add(prof)
-      const pl = new THREE.PointLight(lightK, intensity, range, 1.4)
-      pl.position.copy(plPos); scene.add(pl)
-    }
-    const lfP = makeLEDProfile(W - ledInL - ledInRt, 'x', lightK); lfP.position.set(cx, ledY, ledInF + 0.01)
-    addCove(lfP, new THREE.Vector3(cx, ledY - 0.04, ledInF + 0.02), coveInt, coveRange)
-    const lrP = makeLEDProfile(W - ledInL - ledInRt, 'x', lightK); lrP.position.set(cx, ledY, L - ledInR - 0.01)
-    addCove(lrP, new THREE.Vector3(cx, ledY - 0.04, L - ledInR - 0.02), coveInt, coveRange)
-    const llP = makeLEDProfile(L - ledInF - ledInR, 'z', lightK); llP.position.set(ledInL + 0.01, ledY, cz)
-    addCove(llP, new THREE.Vector3(ledInL + 0.02, ledY - 0.04, cz), coveInt * 0.9, L * 0.95)
-    const lrightP = makeLEDProfile(L - ledInF - ledInR, 'z', lightK); lrightP.position.set(W - ledInRt - 0.01, ledY, cz)
-    addCove(lrightP, new THREE.Vector3(W - ledInRt - 0.02, ledY - 0.04, cz), coveInt * 0.9, L * 0.95)
-    } // perimeter-cove-end
-
-    // Mid-wall LED profiles — luxury: lower dramatic; music: warm side wash; performance: skip
-    if (!isPerformance) {
-      const profY    = isLuxury ? H * 0.45 : isAudiophile ? H * 0.35 : H * 0.55
+    // ── WALL SCONCES ZONE → mid-wall LED profiles / sconce point lights ──
+    if (zOn('wallSconces')) {
+      const wsCol = zCol('wallSconces')
+      const wsBri = zBri('wallSconces')
+      const profY    = H * 0.48
       const profSegs = Math.min(4, Math.max(2, Math.round(L / 2.5)))
-      const profInt  = isLuxury ? 2.2 : isAudiophile ? 2.8 : 1.4
-      const profRange= isLuxury ? 5.5 : isAudiophile ? 6.0 : 4.5
+      const profInt  = wsBri * 2.8
+      const profRange= 5.5
       for (let seg = 0; seg < profSegs; seg++) {
         const segZ = (seg + 0.5) * (L / profSegs)
         const xL = dLeft + 0.018, xR = W - dRight - 0.018
-        const plL = makeLEDProfile(L / profSegs * 0.82, 'z', lightK); plL.position.set(xL, profY, segZ); scene.add(plL)
-        const pll = new THREE.PointLight(lightK, profInt, profRange, 1.6); pll.position.set(xL + 0.06, profY, segZ); scene.add(pll)
-        const plR = makeLEDProfile(L / profSegs * 0.82, 'z', lightK); plR.position.set(xR, profY, segZ); scene.add(plR)
-        const plr = new THREE.PointLight(lightK, profInt, profRange, 1.6); plr.position.set(xR - 0.06, profY, segZ); scene.add(plr)
+        const plL = makeLEDProfile(L / profSegs * 0.82, 'z', wsCol); plL.position.set(xL, profY, segZ); scene.add(plL)
+        const pll = new THREE.PointLight(wsCol, profInt, profRange, 1.6); pll.position.set(xL + 0.06, profY, segZ); scene.add(pll)
+        const plR = makeLEDProfile(L / profSegs * 0.82, 'z', wsCol); plR.position.set(xR, profY, segZ); scene.add(plR)
+        const plr = new THREE.PointLight(wsCol, profInt, profRange, 1.6); plr.position.set(xR - 0.06, profY, segZ); scene.add(plr)
       }
     }
 
-    // Ceiling spine — performance: prominent; luxury + music: skip (side-wall / drama focus)
-    if (!isAudiophile && !isLuxury) {
+    // ── STAR CEILING ZONE → ceiling spine LED strips ──
+    if (zOn('starCeiling')) {
+      const scCol = zCol('starCeiling')
+      const scBri = zBri('starCeiling')
       const spineSegs = Math.min(4, Math.max(2, Math.round(L / 2.2)))
       const spineY    = H - dCeiling - 0.013
-      const spineInt  = isPerformance ? 2.2 : 1.5
+      const spineInt  = scBri * 2.2
       for (let seg = 0; seg < spineSegs; seg++) {
         const segZ = (seg + 0.5) * (L / spineSegs)
-        const spine = makeLEDProfile(L / spineSegs * 0.80, 'z', lightK); spine.position.set(cx, spineY, segZ); scene.add(spine)
-        const sPL = new THREE.PointLight(lightK, spineInt, 3.8, 1.5); sPL.position.set(cx, spineY - 0.05, segZ); scene.add(sPL)
+        const spine = makeLEDProfile(L / spineSegs * 0.80, 'z', scCol); spine.position.set(cx, spineY, segZ); scene.add(spine)
+        const sPL = new THREE.PointLight(scCol, spineInt, 3.8, 1.5); sPL.position.set(cx, spineY - 0.05, segZ); scene.add(sPL)
       }
     }
 
-    // Audiophile: warm floor-bounce uplights — max 4 lights total (2 per side)
-    if (isAudiophile) {
-      const ulL1 = new THREE.PointLight(lightK, 2.2, L * 0.6, 1.8); ulL1.position.set(dLeft + 0.1, 0.3, L * 0.28); scene.add(ulL1)
-      const ulL2 = new THREE.PointLight(lightK, 2.2, L * 0.6, 1.8); ulL2.position.set(dLeft + 0.1, 0.3, L * 0.72); scene.add(ulL2)
-      const ulR1 = new THREE.PointLight(lightK, 2.2, L * 0.6, 1.8); ulR1.position.set(W - dRight - 0.1, 0.3, L * 0.28); scene.add(ulR1)
-      const ulR2 = new THREE.PointLight(lightK, 2.2, L * 0.6, 1.8); ulR2.position.set(W - dRight - 0.1, 0.3, L * 0.72); scene.add(ulR2)
+    // ── ENTRY / FOYER ZONE → rear-wall accent wash ──
+    if (zOn('entryFoyer')) {
+      const efCol = zCol('entryFoyer')
+      const efBri = zBri('entryFoyer')
+      {
+        const rearAccent = new THREE.PointLight(efCol, efBri * 4.5, W * 1.0, 1.5)
+        rearAccent.position.set(cx, H * 0.62, L - dRear - 0.18); scene.add(rearAccent)
+        const rw2 = new THREE.PointLight(efCol, efBri * 2.5, W * 0.9, 1.6)
+        rw2.position.set(W * 0.25, H * 0.45, L - dRear - 0.15); scene.add(rw2)
+        const rw3 = new THREE.PointLight(efCol, efBri * 2.5, W * 0.9, 1.6)
+        rw3.position.set(W * 0.75, H * 0.45, L - dRear - 0.15); scene.add(rw3)
+      }
     }
 
-    // Luxury: low rear-wall accent wash behind seats
-    if (isLuxury && treatmentLevel !== 'none') {
-      const rearAccent = new THREE.PointLight(lightK, 3.5, W * 0.9, 1.6)
-      rearAccent.position.set(cx, H * 0.3, L - dRear - 0.2); scene.add(rearAccent)
+    // ── AISLE / STEP ZONE → recessed step lights at each riser face ──
+    if (zOn('aisleStep') && seatingRowCount > 1) {
+      const asCol = zCol('aisleStep')
+      const asBri = zBri('aisleStep')
+      const SIDE_CLR = (W - usableWidth) / 2
+      for (let row = 1; row < seatingRowCount; row++) {
+        const rH = (seatingRowCount - 1 - row) * riserStepM
+        // matches seatingRearZ = L - dRear - rowPitchM/2 (row centre, not back edge)
+        const rowZ = (L - acousticDepths.rear - rowPitchM / 2) - row * rowPitchM
+        // Two small step lights per riser face (left and right of center)
+        const sL = new THREE.PointLight(asCol, asBri * 1.5, 2.0, 2.2)
+        sL.position.set(SIDE_CLR + usableWidth * 0.25, rH + 0.05, rowZ + 0.02); scene.add(sL)
+        const sR = new THREE.PointLight(asCol, asBri * 1.5, 2.0, 2.2)
+        sR.position.set(SIDE_CLR + usableWidth * 0.75, rH + 0.05, rowZ + 0.02); scene.add(sR)
+      }
     }
-    // Rear-wall diffuser wash — always present when diffusers exist, grazes across columns/fins
-    if (treatmentLevel !== 'none') {
-      const rw1 = new THREE.PointLight(0xffe0a0, 4.5, W * 1.2, 1.5)
-      rw1.position.set(cx, H * 0.62, L - dRear - 0.18); scene.add(rw1)
-      const rw2 = new THREE.PointLight(0xffd0a0, 2.5, W * 0.9, 1.6)
-      rw2.position.set(W * 0.25, H * 0.45, L - dRear - 0.15); scene.add(rw2)
-      const rw3 = new THREE.PointLight(0xffd0a0, 2.5, W * 0.9, 1.6)
-      rw3.position.set(W * 0.75, H * 0.45, L - dRear - 0.15); scene.add(rw3)
+
+    // ── EQUIPMENT RACK ZONE → front-wall task light ──
+    if (zOn('equipmentRack')) {
+      const erCol = zCol('equipmentRack')
+      const erBri = zBri('equipmentRack')
+      const eqLight = new THREE.PointLight(erCol, erBri * 3.0, W * 0.8, 1.8)
+      eqLight.position.set(cx, H * 0.35, dFront + 0.3); scene.add(eqLight)
     }
 
     // ── Mouse / touch orbit ───────────────────────────────────────────────
@@ -1105,10 +1048,11 @@ export default function TheatreView3D(props: TheatreView3DProps) {
       }
     }
 
-    // Seating starts at rear wall and rows progress toward the screen.
-    // Row 0 = back of cinema (near rear wall, highest elevation).
-    // Row N-1 = front of cinema (nearest screen, ground level).
-    const seatingRearZ = L - acousticDepths.rear - frontClearance
+    // rowZ is the CENTRE of each row's riser platform.
+    // Row 0 (back) centre = L - dRear - rowPitchM/2, so its back edge aligns
+    // flush with the inner face of the rear acoustic panel.
+    // Row N-1 (front) centre is rowPitchM/2 past the front row riser front edge.
+    const seatingRearZ = L - acousticDepths.rear - rowPitchM / 2
     // Carpet: uses boxMats — bottom (-y) face ghosted, all others visible
     const _carpetSolid = new THREE.MeshStandardMaterial({ color: 0x121820, roughness: 0.98, metalness: 0.00, side: THREE.FrontSide })
     const carpetMats  = boxMats(_carpetSolid, '-y')
@@ -1122,7 +1066,7 @@ export default function TheatreView3D(props: TheatreView3DProps) {
       const slabH = Math.max(0.04, row === seatingRowCount - 1 ? riserStepM * 0.5 : riserStepM)
       const slab  = new THREE.Mesh(carpetGeo, carpetMats)
       slab.scale.set(W, slabH, rowPitchM * 0.98)
-      slab.position.set(cx, rH + slabH / 2, rowZ - rowPitchM / 2)
+      slab.position.set(cx, rH + slabH / 2, rowZ) // centred on rowZ — back edge at rowZ+rowPitchM/2
       scene.add(slab)
     }
 
@@ -1301,7 +1245,7 @@ export default function TheatreView3D(props: TheatreView3DProps) {
       if (rH > 0.02) {
         const riserMat2 = new THREE.MeshStandardMaterial({ color: 0x131a26, roughness: 0.84, metalness: 0.00, side: THREE.FrontSide })
         const riser = new THREE.Mesh(new THREE.BoxGeometry(usableWidth, rH, rowPitchM * 0.92), boxMats(riserMat2, '-y'))
-        riser.position.set(riserX, rH / 2, rowZ + rowPitchM * 0.02); scene.add(riser)
+        riser.position.set(riserX, rH / 2, rowZ); scene.add(riser) // centred on rowZ — back face at rowZ+rowPitchM/2
       }
       for (let s = 0; s < rowSeats; s++) {
         const seat = makeSeat(seatMat, legsMatT)
@@ -1347,6 +1291,7 @@ export default function TheatreView3D(props: TheatreView3DProps) {
         }
       })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     props.room.width, props.room.length, props.room.height,
     props.acousticDepths.front, props.acousticDepths.rear,
@@ -1361,6 +1306,7 @@ export default function TheatreView3D(props: TheatreView3DProps) {
     props.designIntent, props.treatmentLevel, props.roomColorScheme,
     props.wallConstruction, props.primaryRow, props.screenPlacement,
     props.aisleConfig, props.aisleWidthM,
+    props.lightingZones, props.lightingSceneBrightness,
   ])
 
   return (

@@ -1,7 +1,6 @@
 export const runtime = "nodejs"
 
 import { NextResponse } from "next/server"
-// @ts-ignore
 import nodemailer from "nodemailer"
 import { renderToBuffer } from "@react-pdf/renderer"
 import { buildDocument, ConsultationPayload } from "@/lib/report/generatePdfReport"
@@ -314,7 +313,7 @@ export async function POST(req: Request) {
     }
 
     // ── Always return PDF for download ────────────────────────────────────────
-    return new Response(pdfBuffer as any, {
+    return new Response(pdfBuffer as unknown as BodyInit, {
       status: 200,
       headers: {
         "Content-Type":        "application/pdf",

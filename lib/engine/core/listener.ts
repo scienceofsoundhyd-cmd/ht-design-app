@@ -30,15 +30,15 @@
  * ─────────────────────────────────────────────────────────
  * WHAT IS earHeight?
  * ─────────────────────────────────────────────────────────
- * earHeight is the Y coordinate of the listener's ears —
+ * earHeight is the Z coordinate of the listener's ears —
  * the height of the listening position above the floor.
  *
- * In this engine it is derived directly from position.y.
+ * In this engine it is derived directly from position.z.
  * They are the same value. earHeight exists as a named
  * field because its semantic meaning is different from
- * a generic Y coordinate:
+ * a generic Z coordinate:
  *
- *   position.y says: "this object is Y meters off the floor"
+ *   position.z says: "this object is Z meters off the floor"
  *   earHeight  says: "the acoustic reference plane is here"
  *
  * Other engine modules that compute elevation angles,
@@ -52,15 +52,15 @@
  * ─────────────────────────────────────────────────────────
  * A vector is a direction. The forwardVector tells the
  * engine which way the listener is facing in the horizontal
- * plane (the XZ plane — left/right and front/back).
+ * plane (the XY plane — left/right and front/back).
  *
- * It is expressed as { x: number; z: number }, a 2D
- * direction in the horizontal plane. Y is omitted because
+ * It is expressed as { x: number; y: number }, a 2D
+ * direction in the horizontal plane. Z is omitted because
  * listeners face horizontally — they do not face up or down.
  *
- * The default forwardVector is { x: 0, z: -1 }.
+ * The default forwardVector is { x: 0, y: -1 }.
  * This means the listener faces in the direction of
- * decreasing Z — toward the front wall (Z = 0), which is
+ * decreasing Y — toward the front wall (Y = 0), which is
  * where the screen is. This is the standard listening
  * orientation in every home theater.
  *
@@ -87,8 +87,8 @@
  * Why does this matter?
  *
  * Imagine two vectors:
- *   A = { x: 0, z: -1   }   magnitude = 1     (normalized)
- *   B = { x: 0, z: -100 }   magnitude = 100   (not normalized)
+ *   A = { x: 0, y: -1   }   magnitude = 1     (normalized)
+ *   B = { x: 0, y: -100 }   magnitude = 100   (not normalized)
  *
  * Both point in exactly the same direction (straight ahead).
  * But when you use a vector in a dot product, cross product,
@@ -102,16 +102,16 @@
  * After normalization, the vector has length 1 and the math
  * works correctly regardless of what the original magnitude was.
  *
- * How to compute the magnitude of a 2D vector { x, z }:
- *   magnitude = √(x² + z²)
+ * How to compute the magnitude of a 2D vector { x, y }:
+ *   magnitude = √(x² + y²)
  *
  * How to normalize:
- *   normalized = { x: x / magnitude, z: z / magnitude }
+ *   normalized = { x: x / magnitude, y: y / magnitude }
  *
  * Example:
- *   { x: 3, z: 4 }
+ *   { x: 3, y: 4 }
  *   magnitude = √(9 + 16) = √25 = 5
- *   normalized = { x: 3/5, z: 4/5 } = { x: 0.6, z: 0.8 }
+ *   normalized = { x: 3/5, y: 4/5 } = { x: 0.6, y: 0.8 }
  *   verify: √(0.36 + 0.64) = √1 = 1  ✓
  *
  * The engine requires forwardVector to always be normalized
@@ -136,7 +136,7 @@ import { Point3D } from "./coordinateSystem"
 
 /**
  * ForwardVector is a normalized 2D direction in the
- * horizontal (XZ) plane representing which way the listener
+ * horizontal (XY) plane representing which way the listener
  * is facing.
  *
  * Both components are dimensionless. The vector always has
@@ -144,13 +144,13 @@ import { Point3D } from "./coordinateSystem"
  * explanation in the file header.
  *
  *   x — component along the width axis (positive = rightward)
- *   z — component along the depth axis (negative = toward front wall)
+ *   y — component along the length axis (negative = toward front wall)
  *
- * Default: { x: 0, z: -1 } — facing the front wall (the screen).
+ * Default: { x: 0, y: -1 } — facing the front wall (the screen).
  */
 export type ForwardVector = {
   readonly x: number
-  readonly z: number
+  readonly y: number
 }
 
 /**
@@ -162,16 +162,16 @@ export type ForwardVector = {
  *   position — The 3D location of the listener's ears in
  *   meters, using the engine's coordinate system:
  *     x = distance from the left wall
- *     y = height of ears above the floor
- *     z = distance from the front wall
+ *     y = distance from the front wall
+ *     z = height of ears above the floor
  *
- *   earHeight — The Y coordinate of the listening position,
+ *   earHeight — The Z coordinate of the listening position,
  *   named explicitly for acoustic clarity. Always equal to
- *   position.y. See header explanation above.
+ *   position.z. See header explanation above.
  *
  *   forwardVector — The normalized horizontal direction the
  *   listener faces. Always has magnitude 1. Defaults to
- *   { x: 0, z: -1 } (facing the screen / front wall).
+ *   { x: 0, y: -1 } (facing the screen / front wall).
  *   See header explanation of normalization above.
  *
  * All fields are readonly. A Listener is immutable once
@@ -191,13 +191,13 @@ export type Listener = {
 
 /**
  * Thrown when a forwardVector with zero magnitude is supplied.
- * A zero vector { x: 0, z: 0 } has no direction and cannot
+ * A zero vector { x: 0, y: 0 } has no direction and cannot
  * be normalized. It does not represent a valid orientation.
  */
 export class InvalidForwardVectorError extends Error {
   constructor() {
     super(
-      "forwardVector cannot be a zero vector { x: 0, z: 0 }. " +
+      "forwardVector cannot be a zero vector { x: 0, y: 0 }. " +
       "A forward vector must have a non-zero magnitude so it can " +
       "be normalized to represent a valid direction."
     )
@@ -210,10 +210,10 @@ export class InvalidForwardVectorError extends Error {
 // ─────────────────────────────────────────────────────────
 
 /**
- * Normalizes a 2D XZ vector to unit length (magnitude = 1).
+ * Normalizes a 2D XY vector to unit length (magnitude = 1).
  *
  * Steps:
- *   1. Compute magnitude = √(x² + z²)
+ *   1. Compute magnitude = √(x² + y²)
  *   2. Divide both components by magnitude
  *
  * Throws InvalidForwardVectorError if magnitude is 0,
@@ -221,12 +221,12 @@ export class InvalidForwardVectorError extends Error {
  * has no meaningful direction to normalize to.
  *
  * @param x  X component of the direction vector
- * @param z  Z component of the direction vector
+ * @param y  Y component of the direction vector
  * @returns  A ForwardVector with magnitude exactly 1
- * @throws   InvalidForwardVectorError if x === 0 and z === 0
+ * @throws   InvalidForwardVectorError if x === 0 and y === 0
  */
-function normalizeForwardVector(x: number, z: number): ForwardVector {
-  const magnitude = Math.sqrt(x * x + z * z)
+function normalizeForwardVector(x: number, y: number): ForwardVector {
+  const magnitude = Math.sqrt(x * x + y * y)
 
   if (magnitude === 0) {
     throw new InvalidForwardVectorError()
@@ -234,7 +234,7 @@ function normalizeForwardVector(x: number, z: number): ForwardVector {
 
   return {
     x: x / magnitude,
-    z: z / magnitude,
+    y: y / magnitude,
   }
 }
 
@@ -246,8 +246,8 @@ function normalizeForwardVector(x: number, z: number): ForwardVector {
  * Creates a fully validated, immutable Listener at the given
  * position, facing the front wall (the default orientation).
  *
- * earHeight is derived from position.y.
- * forwardVector is set to the default { x: 0, z: -1 },
+ * earHeight is derived from position.z.
+ * forwardVector is set to the default { x: 0, y: -1 },
  * representing a listener facing straight toward the screen.
  *
  * This is the standard construction path for the vast
@@ -259,22 +259,22 @@ function normalizeForwardVector(x: number, z: number): ForwardVector {
  * creating the base Listener.
  *
  * @param position  The listener's ear position in meters (Point3D).
- *                  position.y represents the ear height above the floor.
+ *                  position.z represents the ear height above the floor.
  * @returns         A frozen, immutable Listener facing the front wall.
  *
  * Example:
- *   createListener({ x: 3, y: 1.2, z: 5 })
+ *   createListener({ x: 3, y: 5, z: 1.2 })
  *   → {
- *       position:      { x: 3, y: 1.2, z: 5 },
+ *       position:      { x: 3, y: 5, z: 1.2 },
  *       earHeight:     1.2,
- *       forwardVector: { x: 0, z: -1 }
+ *       forwardVector: { x: 0, y: -1 }
  *     }
  */
 export function createListener(position: Point3D): Listener {
   return Object.freeze({
     position,
-    earHeight: position.y,
-    forwardVector: Object.freeze<ForwardVector>({ x: 0, z: -1 }),
+    earHeight: position.z,
+    forwardVector: Object.freeze<ForwardVector>({ x: 0, y: -1 }),
   })
 }
 
@@ -284,8 +284,8 @@ export function createListener(position: Point3D): Listener {
  *
  * The provided direction components are normalized
  * automatically — the caller does not need to pre-normalize.
- * Passing { x: 3, z: -4 } produces the same ForwardVector
- * as passing { x: 0.6, z: -0.8 } (both normalize to the
+ * Passing { x: 3, y: -4 } produces the same ForwardVector
+ * as passing { x: 0.6, y: -0.8 } (both normalize to the
  * same unit vector).
  *
  * The original Listener is not modified. A new Listener is
@@ -293,18 +293,18 @@ export function createListener(position: Point3D): Listener {
  *
  * @param listener  The base Listener to derive from (not modified)
  * @param x         X component of the new facing direction
- * @param z         Z component of the new facing direction
+ * @param y         Y component of the new facing direction
  * @returns         A new frozen Listener with normalized forwardVector
- * @throws          InvalidForwardVectorError if x === 0 and z === 0
+ * @throws          InvalidForwardVectorError if x === 0 and y === 0
  *
  * Examples:
  *   // Listener turned 45° toward their right
  *   withForwardVector(listener, 1, -1)
- *   → forwardVector: { x: 0.7071..., z: -0.7071... }
+ *   → forwardVector: { x: 0.7071..., y: -0.7071... }
  *
  *   // Listener facing directly right (90° rotation)
  *   withForwardVector(listener, 1, 0)
- *   → forwardVector: { x: 1, z: 0 }
+ *   → forwardVector: { x: 1, y: 0 }
  *
  *   // Zero vector — throws
  *   withForwardVector(listener, 0, 0)
@@ -313,10 +313,10 @@ export function createListener(position: Point3D): Listener {
 export function withForwardVector(
   listener: Listener,
   x: number,
-  z: number
+  y: number
 ): Listener {
   return Object.freeze({
     ...listener,
-    forwardVector: normalizeForwardVector(x, z),
+    forwardVector: normalizeForwardVector(x, y),
   })
 }

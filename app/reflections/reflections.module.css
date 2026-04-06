@@ -1,0 +1,4848 @@
+/* =====================================================================
+   reflections.module.css
+   Grey theme — no dark, no gold, no gradients
+   New diagram styles appended at bottom
+   All selectors scoped under .root
+   ===================================================================== */
+
+/* ── Custom Properties ── */
+.root {
+  --bg-primary: transparent;
+  --bg-secondary: rgba(255,255,255,0.04);
+  --bg-deep: rgba(255,255,255,0.07);
+  --text-primary: #E4EAF4;
+  --text-secondary: #9DAFC8;
+  --text-muted: #5C7A9A;
+  --font-display: Georgia, serif;
+  --font-body: sans-serif;
+  --max-w: 1280px;
+  --section-pad: clamp(100px, 11vw, 160px);
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.18);
+
+  box-sizing: border-box;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.78;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+.root *,
+.root *::before,
+.root *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.root section,
+.root .page-epigram {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Utilities ── */
+.root .container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 clamp(20px, 5vw, 80px);
+}
+
+.root .gold-line {
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: var(--border-strong);
+  margin: 16px 0 28px 0;
+}
+
+.root .section-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-bottom: 14px;
+  display: block;
+}
+
+.root .section-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 300;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.root .section-subtitle {
+  font-family: var(--font-body);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  font-weight: 300;
+  margin-top: 6px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.root .section-index {
+  position: absolute;
+  top: clamp(28px, 3.5vw, 48px);
+  left: clamp(20px, 5vw, 80px);
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: var(--border-strong);
+  font-weight: 400;
+  user-select: none;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Reveal Animations ── */
+.root .reveal {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.root .reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.root .reveal-delay-1 { transition-delay: 0.1s; }
+.root .reveal-delay-2 { transition-delay: 0.2s; }
+.root .reveal-delay-3 { transition-delay: 0.3s; }
+.root .reveal-delay-4 { transition-delay: 0.4s; }
+.root .reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ── Framework Lines ── */
+.root .framework-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  padding-bottom: 4px;
+}
+
+.root .framework-line-center {
+  justify-content: center;
+}
+
+.root .framework-term {
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 300;
+  white-space: nowrap;
+}
+
+.root .framework-sep {
+  font-size: 9px;
+  color: var(--border-strong);
+  margin: 0 9px;
+  font-weight: 300;
+  flex-shrink: 0;
+}
+
+/* ── Observation Blocks ── */
+.root .obs-block {
+  margin-top: 56px;
+  padding: 24px 28px;
+  border-left: 1px solid var(--border-strong);
+  background: rgba(255,255,255,0.04);
+}
+
+.root .obs-label {
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.root .obs-text {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  font-weight: 300;
+  font-style: italic;
+  max-width: 640px;
+}
+
+.root .obs-block-center {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 640px;
+  border-left: none;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  padding: 28px 0 0;
+  background: transparent;
+}
+
+.root .obs-block-center .obs-text {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.root .cross-connect {
+  margin-top: 20px;
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  line-height: 1.6;
+}
+
+/* ── Diagram Container (fallback) ── */
+.root .diagram-container {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border);
+  background: rgba(255,255,255,0.04);
+}
+
+/* ══════════════════════════════════════════════════
+   HERO
+══════════════════════════════════════════════════ */
+.root .hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+}
+
+.root .hero-left {
+  padding: clamp(100px, 12vw, 160px) clamp(20px, 5vw, 80px) clamp(80px, 10vw, 120px);
+  position: relative;
+  z-index: 2;
+}
+
+.root .hero-eyebrow { display: none; }
+.root .hero-divider  { display: none; }
+
+.root .hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(52px, 7vw, 96px);
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin-bottom: 18px;
+  opacity: 0;
+  animation: fadeUp 0.9s 0.2s forwards;
+}
+
+.root .hero-subtitle {
+  font-family: var(--font-display);
+  font-size: clamp(16px, 2.5vw, 22px);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: fadeUp 0.9s 0.35s forwards;
+}
+
+.root .hero-body {
+  font-size: clamp(14px, 1.5vw, 16px);
+  color: var(--text-secondary);
+  max-width: 520px;
+  line-height: 2;
+  opacity: 0;
+  animation: fadeUp 0.9s 0.5s forwards;
+}
+
+.root .hero-body p + p { margin-top: 18px; }
+
+.root .hero-body .highlight {
+  color: var(--text-primary);
+  font-style: italic;
+}
+
+.root .hero-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 40px;
+  opacity: 0;
+  animation: fadeUp 0.9s 0.65s forwards;
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.root .hero-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.root .hero-meta-label {
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.root .hero-meta-value {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 300;
+}
+
+.root .hero-meta-dot {
+  width: 1px;
+  height: 10px;
+  background: var(--border-strong);
+  margin: 0 14px;
+  flex-shrink: 0;
+}
+
+.root .hero-right {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Portrait */
+.root .portrait-frame {
+  position: relative;
+  width: min(380px, 85%);
+  opacity: 0;
+  animation: fadeIn 1s 0.4s forwards;
+}
+
+.root .portrait-frame::before,
+.root .portrait-frame::after { display: none; }
+
+.root .portrait-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: rgba(255,255,255,0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.root .portrait-placeholder {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+
+.root .portrait-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.root .portrait-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.root .portrait-hint {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.root .portrait-caption {
+  margin-top: 14px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.root .scroll-indicator,
+.root .scroll-line,
+.root .scroll-text { display: none; }
+
+/* Keyframes */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* ══════════════════════════════════════════════════
+   SECTION 01 — WHAT IS LIFE
+══════════════════════════════════════════════════ */
+.root .life {
+  background: rgba(255,255,255,0.04);
+  padding: var(--section-pad) 0;
+  position: relative;
+}
+
+.root .life::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: var(--border);
+}
+
+.root .life-header { margin-bottom: 72px; }
+.root .life-header .framework-line { margin-top: 0; }
+
+.root .life-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.root .life-blocks {
+  display: flex;
+  flex-direction: column;
+}
+
+.root .life-block {
+  padding: 28px 0 28px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: default;
+  position: relative;
+  transition: padding-left 0.3s ease;
+}
+
+.root .life-block:first-child { border-top: 1px solid var(--border); }
+
+.root .life-block::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 1px;
+  background: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.root .life-block:hover::before { opacity: 0.3; }
+.root .life-block:hover { padding-left: 20px; }
+
+.root .life-block-number {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.18em;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.root .life-block-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.root .life-block-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.85;
+  max-width: 400px;
+}
+
+.root .life-visual {
+  position: sticky;
+  top: 100px;
+  aspect-ratio: 4 / 5;
+  background: transparent;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.root .life-visual-label {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════════════
+   SECTION 02 — EVOLUTION OF INTELLIGENCE
+══════════════════════════════════════════════════ */
+.root .evolution {
+  padding: var(--section-pad) 0;
+  background: transparent;
+  position: relative;
+}
+
+.root .evolution-header { text-align: center; margin-bottom: 56px; }
+.root .evolution-header .gold-line { margin: 16px auto 28px; }
+.root .evolution-header .framework-line { margin-top: 0; }
+
+/* Desktop timeline */
+.root .timeline-wrapper {
+  position: relative;
+  overflow-x: auto;
+  padding-bottom: 20px;
+}
+
+.root .timeline {
+  display: flex;
+  min-width: max-content;
+  position: relative;
+  padding: 60px clamp(20px, 5vw, 80px) 80px;
+}
+
+.root .timeline::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 0; right: 0;
+  height: 1px;
+  background: var(--border-strong);
+  transform: translateY(-50%);
+}
+
+.root .timeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  min-width: 210px;
+  cursor: pointer;
+}
+
+.root .node-dot-wrapper {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.root .node-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--text-muted);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.root .timeline-node:hover .node-dot,
+.root .timeline-node.active .node-dot {
+  background: var(--text-secondary);
+  border-color: var(--text-secondary);
+}
+
+.root .node-year {
+  margin-top: 14px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.root .node-title {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  max-width: 130px;
+  line-height: 1.2;
+}
+
+.root .node-card {
+  position: absolute;
+  bottom: calc(100% + 48px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  width: 240px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-strong);
+  padding: 22px 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 10;
+}
+
+.root .node-card::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px; height: 10px;
+  background: rgba(255,255,255,0.04);
+  border-right: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.root .timeline-node:hover .node-card,
+.root .timeline-node.active .node-card {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.root .node-card-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.root .node-card-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+/* Mobile timeline */
+.root .timeline-mobile {
+  display: none;
+  flex-direction: column;
+  position: relative;
+  padding-left: 40px;
+}
+
+.root .timeline-mobile::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 16px;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+.root .mobile-node {
+  position: relative;
+  padding: 0 0 48px 32px;
+}
+
+.root .mobile-node::before {
+  content: '';
+  position: absolute;
+  left: -25px; top: 5px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--text-muted);
+}
+
+.root .mobile-node-year {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.root .mobile-node-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.root .mobile-node-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.78;
+}
+
+/* ══════════════════════════════════════════════════
+   SECTION 03 — REALITY & PERCEPTION
+══════════════════════════════════════════════════ */
+.root .reality {
+  background: rgba(255,255,255,0.04);
+  padding: var(--section-pad) 0;
+  position: relative;
+}
+
+.root .reality::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: var(--border);
+}
+
+.root .reality-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.root .reality-left { position: relative; }
+
+.root .reality-quote {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.35;
+  color: var(--text-primary);
+  position: relative;
+}
+
+.root .reality-quote::before {
+  content: '\201C';
+  display: block;
+  font-size: 100px;
+  color: var(--text-muted);
+  opacity: 0.1;
+  line-height: 0.6;
+  margin-bottom: 20px;
+  font-family: var(--font-display);
+}
+
+.root .reality-quote-attr {
+  margin-top: 28px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Expand Cards */
+.root .cards-micro-label {
+  font-size: 9px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.root .cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.root .expand-card {
+  background: transparent;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.root .expand-card:hover,
+.root .expand-card.open { border-color: var(--border-strong); }
+
+.root .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 22px;
+}
+
+.root .card-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.root .card-icon {
+  width: 18px; height: 18px;
+  position: relative;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.root .expand-card.open .card-icon { transform: rotate(45deg); }
+
+.root .card-icon::before,
+.root .card-icon::after {
+  content: '';
+  position: absolute;
+  background: var(--text-muted);
+  border-radius: 1px;
+}
+
+.root .card-icon::before {
+  width: 10px; height: 1px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.root .card-icon::after {
+  width: 1px; height: 10px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.root .card-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.root .expand-card.open .card-body { max-height: 360px; }
+
+.root .card-body-inner {
+  padding: 16px 22px 24px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.88;
+  border-top: 1px solid var(--border);
+}
+
+/* ══════════════════════════════════════════════════
+   SECTION 04 — RELIGION & MEANING
+══════════════════════════════════════════════════ */
+.root .religion {
+  padding: var(--section-pad) 0;
+  background: transparent;
+  position: relative;
+}
+
+.root .religion-header { text-align: center; margin-bottom: 72px; }
+.root .religion-header .gold-line { margin: 16px auto 0; }
+.root .religion-header .framework-line { margin-top: 0; }
+
+.root .religion-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.root .religion-col {
+  background: transparent;
+  padding: 52px 40px;
+  position: relative;
+  transition: background 0.25s ease;
+}
+
+.root .religion-col:hover { background: rgba(255,255,255,0.04); }
+
+.root .religion-col-number {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 300;
+  color: var(--border-strong);
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+.root .religion-col-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+
+.root .religion-col-divider {
+  width: 28px; height: 1px;
+  background: var(--border-strong);
+  margin-bottom: 18px;
+}
+
+.root .religion-col-text {
+  font-size: 14.5px;
+  color: var(--text-secondary);
+  line-height: 1.88;
+}
+
+/* ══════════════════════════════════════════════════
+   SECTION 05 — CONSCIOUSNESS
+══════════════════════════════════════════════════ */
+.root .consciousness {
+  background: rgba(255,255,255,0.07);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: visible;
+}
+
+.root .consciousness-inner {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 800px;
+  padding: 0 clamp(20px, 5vw, 80px);
+}
+
+.root .consciousness-label {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 72px;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.root .consciousness-label.visible { opacity: 1; }
+
+.root .consciousness-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.root .c-line {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 58px);
+  font-weight: 300;
+  color: var(--text-primary);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+
+.root .c-line.visible { opacity: 1; transform: translateY(0); }
+
+.root .c-line span {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.root .c-line:last-child { color: var(--text-primary); }
+
+.root .c-line:nth-child(1) { transition-delay: 0s; }
+.root .c-line:nth-child(2) { transition-delay: 0.12s; }
+.root .c-line:nth-child(3) { transition-delay: 0.24s; }
+.root .c-line:nth-child(4) { transition-delay: 0.36s; }
+
+.root .consciousness-footnote {
+  margin-top: 72px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 1s 0.8s ease;
+}
+
+.root .consciousness-footnote.visible { opacity: 1; }
+
+.root .consciousness .section-index { color: var(--border-strong); }
+.root .consciousness .framework-line .framework-term { color: var(--text-muted); opacity: 0.65; }
+.root .consciousness .framework-line .framework-sep { opacity: 0.5; }
+
+/* ══════════════════════════════════════════════════
+   SECTION 06 — SYSTEM VIEW
+══════════════════════════════════════════════════ */
+.root .sysview {
+  padding: var(--section-pad) 0;
+  background: rgba(255,255,255,0.04);
+  position: relative;
+  border-top: 1px solid var(--border);
+}
+
+.root .sysview-header { margin-bottom: 60px; }
+
+.root .sysview-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.root .sysview-chain { display: flex; flex-direction: column; }
+
+.root .sysview-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.root .sysview-row:first-child { border-top: 1px solid var(--border); }
+.root .sysview-row-indent { padding-left: 28px; }
+
+.root .sysview-arrow {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-right: 14px;
+  margin-top: 3px;
+  flex-shrink: 0;
+  font-weight: 300;
+}
+
+.root .sysview-term {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.root .sysview-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 300;
+  margin-top: 4px;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+}
+
+.root .sysview-right { padding-top: 8px; }
+
+.root .sysview-conclusion {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.5vw, 28px);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin-bottom: 32px;
+}
+
+.root .sysview-detail {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.85;
+  font-weight: 300;
+  max-width: 400px;
+}
+
+.root .sysview-detail + .sysview-detail { margin-top: 16px; }
+
+/* ══════════════════════════════════════════════════
+   SECTION 07 — OPEN QUESTIONS
+══════════════════════════════════════════════════ */
+.root .questions {
+  padding: var(--section-pad) 0;
+  background: transparent;
+  position: relative;
+}
+
+.root .questions::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: var(--border);
+}
+
+.root .questions-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.root .questions-inner .section-title { margin-bottom: 6px; }
+.root .questions-inner .section-subtitle { margin-bottom: 0; }
+.root .questions-inner .gold-line { margin: 16px auto 24px; }
+
+.root .questions-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 72px;
+}
+
+.root .q-item {
+  border-bottom: 1px solid var(--border);
+  padding: 22px 0;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+}
+
+.root .q-item:first-child { border-top: 1px solid var(--border); }
+
+.root .q-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.04);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.root .q-item:hover::before { transform: scaleX(1); }
+
+.root .q-text {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 300;
+  color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+  transition: padding-left 0.35s ease;
+}
+
+.root .q-item:hover .q-text { padding-left: 6px; }
+
+.root .closing-line {
+  font-family: var(--font-display);
+  font-size: clamp(13px, 1.8vw, 16px);
+  font-style: italic;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+.root .closing-line::before {
+  content: '—';
+  margin-right: 10px;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE EPIGRAM
+══════════════════════════════════════════════════ */
+.root .page-epigram {
+  padding: 52px clamp(20px, 5vw, 80px);
+  background: rgba(255,255,255,0.04);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.root .page-epigram-rule {
+  width: 32px; height: 1px;
+  background: var(--border-strong);
+}
+
+.root .page-epigram-text {
+  font-family: var(--font-display);
+  font-size: clamp(12px, 1.4vw, 14px);
+  font-style: italic;
+  font-weight: 300;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════
+   DIAGRAM A — LIFE SYSTEM FLOW
+══════════════════════════════════════════════════ */
+.root .flow-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  height: 100%;
+  padding: 28px 24px 56px 24px;
+  gap: 0;
+}
+
+.root .flow-node-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.root .flow-node {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 8px;
+  border-radius: 2px;
+  transition: background 0.2s ease;
+}
+
+.root .flow-node:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.root .flow-node-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.root .flow-node:hover .flow-node-circle {
+  border-color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+}
+
+.root .flow-node-index {
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.root .flow-node-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.root .flow-node-label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.root .flow-node-sub {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+}
+
+.root .flow-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-left: 26px;
+  gap: 0;
+}
+
+.root .flow-connector-line {
+  width: 1px;
+  height: 14px;
+  background: var(--border-strong);
+}
+
+.root .flow-connector-arrow {
+  color: var(--border-strong);
+  display: block;
+}
+
+/* ══════════════════════════════════════════════════
+   DIAGRAM B — EVOLUTION BRANCHING SVG
+══════════════════════════════════════════════════ */
+.root .evo-diagram-wrap {
+  max-width: 380px;
+  margin: 0 auto 60px;
+  padding: 0 clamp(20px, 5vw, 80px);
+}
+
+.root .evo-svg {
+  overflow: visible;
+  display: block;
+}
+
+.root .evo-node-g {
+  cursor: default;
+}
+
+.root .evo-node-g:hover .evo-circle {
+  fill: var(--bg-deep);
+  stroke: var(--text-secondary);
+}
+
+.root .evo-node-g:hover .evo-label {
+  fill: var(--text-secondary);
+}
+
+/* ══════════════════════════════════════════════════
+   DIAGRAM C — PREDICTIVE STACK
+══════════════════════════════════════════════════ */
+.root .pred-stack {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.root .pred-stack-label {
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.root .pred-layer-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.root .pred-layer {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  background: transparent;
+  padding: 10px 16px;
+  width: 100%;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.root .pred-layer:hover {
+  border-color: var(--border-strong);
+  background: rgba(255,255,255,0.04);
+}
+
+.root .pred-layer-name {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.root .pred-layer-note {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.root .pred-arrow {
+  padding-left: 22px;
+  color: var(--text-muted);
+  display: flex;
+}
+
+/* ══════════════════════════════════════════════════
+   DIAGRAM D — CONSCIOUSNESS RECURSIVE LOOP
+══════════════════════════════════════════════════ */
+.root .c-loop-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 56px;
+}
+
+.root .c-loop-svg {
+  overflow: visible;
+}
+
+.root .c-loop-track {
+  transform-origin: 120px 120px;
+  animation: loopSpin 18s linear infinite;
+}
+
+@keyframes loopSpin {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -453; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root .c-loop-track { animation: none; }
+  .root .reveal {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .root .hero {
+    grid-template-columns: 1fr;
+    min-height: unset;
+  }
+
+  .root .hero-left {
+    padding: 120px clamp(20px, 5vw, 40px) 40px;
+  }
+
+  .root .hero-right {
+    height: 60vw;
+    min-height: 280px;
+    max-height: 420px;
+  }
+
+  .root .portrait-frame { width: 60%; }
+
+  .root .life-grid,
+  .root .reality-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .root .life-visual { display: none; }
+
+  .root .religion-grid { grid-template-columns: 1fr; gap: 1px; }
+
+  .root .timeline-wrapper { display: none; }
+  .root .timeline-mobile  { display: flex; }
+
+  .root .cards-grid { grid-template-columns: 1fr; }
+
+  .root .sysview-inner { grid-template-columns: 1fr; gap: 48px; }
+
+  .root .obs-block { margin-top: 40px; }
+
+  .root .evo-diagram-wrap { display: none; }
+
+  .root .pred-stack { width: 100%; }
+
+  .root .c-loop-wrap svg {
+    width: 180px;
+    height: 180px;
+  }
+}
+
+@media (max-width: 600px) {
+  .root .religion-col { padding: 32px 20px; }
+  .root .reality-quote::before { font-size: 70px; }
+}
+
+/* ══════════════════════════════════════════════════
+   CONCEPT COLOUR OVERRIDES
+══════════════════════════════════════════════════ */
+
+/* Section 01 · Life — Sage Green */
+.root .life .section-label   { color: #4A7A56; }
+.root .life .section-subtitle { color: #5A8A66; }
+.root .life .gold-line        { background: #4A7A56; opacity: 0.5; }
+.root .life .framework-term   { color: #4A7A56; }
+.root .life .framework-sep    { color: #4A7A56; opacity: 0.4; }
+.root .life-block-number      { color: #5A8A66; }
+.root .life-block:hover       { background: #EAF3EB; }
+.root .life-block:hover::before { background: #4A7A56; opacity: 1; }
+.root .flow-node:hover        { background: #EAF3EB; }
+.root .flow-node:hover .flow-node-circle {
+  border-color: #4A7A56;
+  background: #D6EDD9;
+}
+.root .flow-node:hover .flow-node-index { color: #4A7A56; }
+
+/* Section 02 · Evolution — Steel Blue */
+.root .evolution .section-label   { color: #3A5E8C; }
+.root .evolution .section-subtitle { color: #4A6E9C; }
+.root .evolution .gold-line        { background: #3A5E8C; opacity: 0.5; }
+.root .evolution .framework-term   { color: #3A5E8C; }
+.root .evolution .framework-sep    { color: #3A5E8C; opacity: 0.4; }
+.root .mobile-node::before         { border-color: #3A5E8C; }
+.root .timeline-node:hover .node-dot,
+.root .timeline-node.active .node-dot {
+  background: #3A5E8C;
+  border-color: #3A5E8C;
+}
+
+/* Section 03 · Reality — Soft Violet */
+.root .reality .section-label    { color: #5E4480; }
+.root .reality .section-subtitle  { color: #6E5490; }
+.root .reality .gold-line         { background: #5E4480; opacity: 0.5; }
+.root .reality .framework-term    { color: #5E4480; }
+.root .reality .framework-sep     { color: #5E4480; opacity: 0.4; }
+.root .expand-card:hover          { border-color: #B8A0D4; }
+.root .expand-card.open           { border-color: #9A80C0; }
+.root .expand-card.open .card-body { background: #F2EEF8; }
+.root .cards-micro-label          { color: #5E4480; }
+
+/* Section 04 · Religion — Warm Amber */
+.root .religion .section-label    { color: #8A5E2A; }
+.root .religion .section-subtitle  { color: #9A6E3A; }
+.root .religion .gold-line         { background: #8A5E2A; opacity: 0.5; }
+.root .religion .framework-term    { color: #8A5E2A; }
+.root .religion .framework-sep     { color: #8A5E2A; opacity: 0.4; }
+.root .religion-col-number         { color: #C8A070; }
+.root .religion-col:hover          { background: #FBF4EA; }
+
+/* Section 05 · Consciousness — Deep Slate Blue */
+.root .consciousness .section-label { color: #2E4D6A; }
+.root .consciousness .gold-line      { background: #2E4D6A; opacity: 0.45; }
+.root .consciousness                 { background: #D8E5EF; }
+
+/* Section 06 · System View — Teal-Grey */
+.root .sysview .section-label    { color: #3D6B58; }
+.root .sysview .section-subtitle  { color: #4D7B68; }
+.root .sysview .gold-line         { background: #3D6B58; opacity: 0.5; }
+.root .sysview-arrow              { color: #3D6B58; }
+.root .sysview-row {
+  transition: background 0.2s ease;
+}
+.root .sysview-row:hover          { background: #EBF4F0; }
+
+/* Section 07 · Open Questions — Dusty Rose */
+.root .questions .section-label    { color: #7A3D3D; }
+.root .questions .section-subtitle  { color: #8A4D4D; }
+.root .questions .gold-line         { background: #7A3D3D; opacity: 0.5; }
+.root .questions .framework-term    { color: #7A3D3D; }
+.root .questions .framework-sep     { color: #7A3D3D; opacity: 0.4; }
+.root .q-item:hover::before         { background: #F5E8E8; }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   DARK THEME — CLEAN OVERRIDE
+   Applied after all original styles. Uses CSS variable override so
+   every var() call auto-resolves to dark values. Only hardcoded
+   colors (section accent overrides) need explicit targeting.
+   NO padding or layout changes — structure is untouched.
+══════════════════════════════════════════════════════════════════ */
+
+/* ── 1 · Dark page base ────────────────────────────────────────── */
+:global(body) {
+  background: #070f1e;
+}
+
+/* ── 2 · Override all CSS variables at root — fixes every var() ── */
+.root {
+  background: transparent;
+
+  --bg-primary:    transparent;
+  --bg-secondary:  rgba(255,255,255,0.0);
+  --bg-deep:       rgba(255,255,255,0.0);
+  --text-primary:  #e2e8f8;
+  --text-secondary:#a4b4d4;
+  --text-muted:    #6878a0;
+  --border:        rgba(90, 130, 210, 0.15);
+  --border-strong: rgba(90, 130, 210, 0.28);
+  --font-display:  Georgia, serif;
+  --font-body:     sans-serif;
+}
+
+/* ── 3 · All sections transparent ─────────────────────────────── */
+.root .hero,
+.root .life,
+.root .evolution,
+.root .reality,
+.root .religion,
+.root .consciousness,
+.root .sysview,
+.root .questions,
+.root .page-epigram {
+  background: transparent !important;
+}
+
+/* ── 4 · Section dividers — visible on dark ────────────────────── */
+.root .life::before,
+.root .reality::before,
+.root .questions::before {
+  background: rgba(90, 130, 210, 0.18);
+}
+.root .sysview {
+  border-top-color: rgba(90, 130, 210, 0.18);
+}
+
+/* ── 5 · Text containers — frosted glass panels behind text ─────
+   Only wrapping containers, not layout children. Inset::before
+   pseudo-element so it doesn't change sizing/padding of the element.
+─────────────────────────────────────────────────────────────────── */
+
+/* Hero left text column */
+.root .hero-left {
+  position: relative;
+  z-index: 2;
+}
+.root .hero-left::after {
+  content: '';
+  position: absolute;
+  inset: -24px -36px;
+  background: rgba(4, 7, 18, 0.62);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 6px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Section headers (label + title + framework line area) */
+.root .life-header,
+.root .evolution-header,
+.root .religion-header,
+.root .sysview-header {
+  position: relative;
+  z-index: 2;
+}
+.root .life-header::after,
+.root .evolution-header::after,
+.root .religion-header::after,
+.root .sysview-header::after {
+  content: '';
+  position: absolute;
+  inset: -20px -28px;
+  background: rgba(4, 7, 18, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 4px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Reality left (blockquote + pred stack) */
+.root .reality-left {
+  position: relative;
+  z-index: 2;
+}
+.root .reality-left::after {
+  content: '';
+  position: absolute;
+  inset: -20px -24px;
+  background: rgba(4, 7, 18, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 4px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Reality right (cards column) */
+.root .reality-right {
+  position: relative;
+  z-index: 2;
+}
+.root .reality-right::after {
+  content: '';
+  position: absolute;
+  inset: -20px -24px;
+  background: rgba(4, 7, 18, 0.48);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 4px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Consciousness inner */
+.root .consciousness-inner {
+  position: relative;
+  z-index: 2;
+}
+.root .consciousness-inner::after {
+  content: '';
+  position: absolute;
+  inset: -32px -40px;
+  background: rgba(4, 7, 18, 0.60);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 6px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Sysview right column */
+.root .sysview-right {
+  position: relative;
+  z-index: 2;
+}
+.root .sysview-right::after {
+  content: '';
+  position: absolute;
+  inset: -20px -24px;
+  background: rgba(4, 7, 18, 0.52);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 4px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Questions inner */
+.root .questions-inner {
+  position: relative;
+  z-index: 2;
+}
+.root .questions-inner::after {
+  content: '';
+  position: absolute;
+  inset: -20px -28px;
+  background: rgba(4, 7, 18, 0.58);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 4px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ── 6 · Life blocks list ──────────────────────────────────────── */
+.root .life-blocks {
+  position: relative;
+  z-index: 2;
+}
+.root .life-blocks::after {
+  content: '';
+  position: absolute;
+  inset: 0 -24px;
+  background: rgba(4, 7, 18, 0.52);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 4px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.root .life-block {
+  border-bottom-color: rgba(90, 130, 210, 0.14);
+}
+.root .life-block:first-child {
+  border-top-color: rgba(90, 130, 210, 0.14);
+}
+.root .life-block:hover {
+  background: rgba(14, 22, 50, 0.65);
+  padding-left: 20px;
+}
+.root .life-block:hover::before {
+  background: #6ec878;
+  opacity: 0.7;
+}
+.root .life-block-number { color: #5a9a6a; }
+.root .life-block-title  { color: #dde6fa; }
+.root .life-block-text   { color: #8898c0; }
+
+/* Life visual sticky */
+.root .life-visual {
+  background: rgba(6, 10, 24, 0.80);
+  border-color: rgba(90, 130, 210, 0.18);
+}
+.root .life-visual-label { color: #6878a0; }
+
+/* Flow diagram */
+.root .flow-node-circle {
+  background: rgba(6, 10, 24, 0.90);
+  border-color: rgba(90, 130, 210, 0.32);
+}
+.root .flow-node:hover { background: rgba(14, 22, 50, 0.60); }
+.root .flow-node:hover .flow-node-circle {
+  border-color: #6ec878;
+  background: rgba(10, 30, 18, 0.80);
+}
+.root .flow-node-index  { color: #6878a0; }
+.root .flow-node-label  { color: #dde6fa; }
+.root .flow-node-sub    { color: #6878a0; }
+.root .flow-connector-line  { background: rgba(90, 130, 210, 0.24); }
+.root .flow-connector-arrow { color: rgba(90, 130, 210, 0.40); }
+
+/* ── 7 · Timeline ──────────────────────────────────────────────── */
+.root .timeline::before { background: rgba(90, 130, 210, 0.22); }
+.root .node-dot {
+  background: rgba(6, 10, 24, 0.95);
+  border-color: rgba(90, 130, 210, 0.48);
+}
+.root .timeline-node:hover .node-dot,
+.root .timeline-node.active .node-dot {
+  background: #7aaedd;
+  border-color: #7aaedd;
+}
+.root .node-year  { color: #6878a0; }
+.root .node-title { color: #d0daf4; }
+
+/* Timeline tooltip */
+.root .node-card {
+  background: rgba(4, 7, 18, 0.96);
+  border-color: rgba(90, 130, 210, 0.30);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.root .node-card::after {
+  background: rgba(4, 7, 18, 0.96);
+  border-right-color: rgba(90, 130, 210, 0.30);
+  border-bottom-color: rgba(90, 130, 210, 0.30);
+}
+.root .node-card-title { color: #dde6fa; }
+.root .node-card-text  { color: #8898c0; }
+
+/* Mobile timeline */
+.root .timeline-mobile::before { background: rgba(90, 130, 210, 0.22); }
+.root .mobile-node::before {
+  background: rgba(6, 10, 24, 0.95);
+  border-color: rgba(90, 130, 210, 0.48);
+}
+.root .mobile-node-year  { color: #6878a0; }
+.root .mobile-node-title { color: #d0daf4; }
+.root .mobile-node-text  { color: #8898c0; }
+
+/* ── 8 · Expand cards (Reality section) ────────────────────────── */
+.root .expand-card {
+  background: rgba(6, 10, 24, 0.82);
+  border-color: rgba(90, 130, 210, 0.20);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.root .expand-card:hover { border-color: rgba(176, 142, 224, 0.48); }
+.root .expand-card.open  { border-color: rgba(176, 142, 224, 0.65); }
+.root .expand-card.open .card-body {
+  background: rgba(16, 8, 34, 0.85);
+}
+.root .card-title      { color: #dde6fa; }
+.root .card-body-inner {
+  color: #8898c0;
+  border-top-color: rgba(90, 130, 210, 0.16);
+}
+.root .card-icon::before,
+.root .card-icon::after { background: #6878a0; }
+.root .cards-micro-label { color: #b08ee0; }
+
+/* Pred stack */
+.root .pred-stack-label { color: #6878a0; }
+.root .pred-layer {
+  background: rgba(6, 10, 24, 0.82);
+  border-color: rgba(90, 130, 210, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.root .pred-layer:hover {
+  background: rgba(20, 14, 44, 0.90);
+  border-color: rgba(176, 142, 224, 0.45);
+}
+.root .pred-layer-name { color: #dde6fa; }
+.root .pred-layer-note { color: #6878a0; }
+.root .pred-arrow { color: rgba(90, 130, 210, 0.48); }
+
+/* ── 9 · Religion columns ──────────────────────────────────────── */
+.root .religion-grid {
+  background: rgba(90, 130, 210, 0.10);
+  border-color: rgba(90, 130, 210, 0.16);
+}
+.root .religion-col {
+  background: rgba(6, 10, 24, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.root .religion-col:hover { background: rgba(20, 16, 8, 0.88); }
+.root .religion-col-number  { color: rgba(232, 184, 122, 0.32); }
+.root .religion-col-title   { color: #dde6fa; }
+.root .religion-col-divider { background: rgba(232, 184, 122, 0.38); }
+.root .religion-col-text    { color: #8898c0; }
+
+/* ── 10 · Consciousness ────────────────────────────────────────── */
+.root .consciousness { background: transparent !important; }
+.root .consciousness-label    { color: #6878a0; }
+.root .c-line      { color: #dde6fa; }
+.root .c-line span { color: #8898c0; }
+.root .c-line:last-child { color: #f0f4ff; font-weight: 400; }
+.root .consciousness-footnote { color: #6878a0; }
+.root .c-loop-track { stroke: rgba(90, 130, 210, 0.26); }
+
+/* ── 11 · SysView ──────────────────────────────────────────────── */
+.root .sysview-chain {
+  background: transparent;
+  border-radius: 4px;
+  padding: 8px 0;
+}
+.root .sysview-row { border-bottom-color: rgba(90, 130, 210, 0.14); display: flex; align-items: center; gap: 8px; }
+.root .sysview-row:first-child { border-top-color: rgba(90, 130, 210, 0.14); }
+.root .sysview-row:hover { background: rgba(10, 22, 18, 0.58); }
+.root .sysview-term { color: #dde6fa; }
+.root .sysview-sub  { color: #6878a0; }
+.root .sysview-conclusion { color: #a4b4d4; }
+.root .sysview-detail     { color: #6878a0; }
+.root .sysview-arrow      { color: rgba(127, 207, 176, 0.60); }
+
+/* ── 12 · Observation blocks ───────────────────────────────────── */
+.root .obs-block {
+  background: rgba(4, 7, 18, 0.78);
+  border-left-color: rgba(90, 130, 210, 0.30);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.root .obs-block-center {
+  background: transparent;
+  border-left: none;
+  border-top-color: rgba(90, 130, 210, 0.18);
+}
+.root .obs-label     { color: #6878a0; }
+.root .obs-text      { color: #9aaac8; font-style: italic; }
+.root .cross-connect { color: #6878a0; }
+
+/* ── 13 · Questions ────────────────────────────────────────────── */
+.root .q-item { border-bottom-color: rgba(90, 130, 210, 0.14); }
+.root .q-item:first-child { border-top-color: rgba(90, 130, 210, 0.14); }
+.root .q-item::before { background: rgba(20, 8, 8, 0.55); }
+.root .q-text { color: #d0daf4; }
+.root .closing-line { color: #6878a0; }
+.root .closing-line::before { color: rgba(232, 144, 144, 0.50); }
+
+/* ── 14 · Page epigram ─────────────────────────────────────────── */
+.root .page-epigram {
+  background: rgba(4, 7, 18, 0.85);
+  border-top-color: rgba(90, 130, 210, 0.16);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.root .page-epigram-rule { background: rgba(90, 130, 210, 0.28); }
+.root .page-epigram-text { color: #6878a0; }
+
+/* ── 15 · Section accent overrides (override light-theme values) ─ */
+
+/* Life — emerald green */
+.root .life .section-label    { color: #6ec878 !important; }
+.root .life .section-subtitle { color: #5aaa66 !important; }
+.root .life .gold-line        { background: #6ec878 !important; opacity: 0.7; }
+.root .life .framework-term   { color: #6ec878 !important; }
+.root .life .framework-sep    { color: rgba(110, 200, 120, 0.50) !important; }
+
+/* Evolution — sky blue */
+.root .evolution .section-label    { color: #7aaedd !important; }
+.root .evolution .section-subtitle { color: #6090c0 !important; }
+.root .evolution .gold-line        { background: #7aaedd !important; opacity: 0.7; }
+.root .evolution .framework-term   { color: #7aaedd !important; }
+.root .evolution .framework-sep    { color: rgba(122, 174, 221, 0.50) !important; }
+.root .timeline-node:hover .node-dot,
+.root .timeline-node.active .node-dot {
+  background: #7aaedd !important;
+  border-color: #7aaedd !important;
+}
+
+/* Reality — soft violet */
+.root .reality .section-label    { color: #b08ee0 !important; }
+.root .reality .section-subtitle { color: #9070c8 !important; }
+.root .reality .gold-line        { background: #b08ee0 !important; opacity: 0.7; }
+.root .reality .framework-term   { color: #b08ee0 !important; }
+.root .reality .framework-sep    { color: rgba(176, 142, 224, 0.50) !important; }
+.root .reality-quote             { color: #dde6fa; }
+.root .reality-quote::before     { color: rgba(176, 142, 224, 0.20) !important; opacity: 1; }
+.root .reality-quote-attr        { color: #6878a0; }
+
+/* Religion — warm amber */
+.root .religion .section-label    { color: #e8b87a !important; }
+.root .religion .section-subtitle { color: #c89850 !important; }
+.root .religion .gold-line        { background: #e8b87a !important; opacity: 0.7; }
+.root .religion .framework-term   { color: #e8b87a !important; }
+.root .religion .framework-sep    { color: rgba(232, 184, 122, 0.50) !important; }
+.root .religion-col:hover         { background: rgba(20, 16, 8, 0.88) !important; }
+
+/* Consciousness — pale blue */
+.root .consciousness .section-label { color: #88bcee !important; }
+.root .consciousness .gold-line     { background: #88bcee !important; opacity: 0.7; }
+.root .consciousness .framework-term { color: #88bcee !important; }
+
+/* SysView — teal */
+.root .sysview .section-label    { color: #7fcfb0 !important; }
+.root .sysview .section-subtitle { color: #5aaa88 !important; }
+.root .sysview .gold-line        { background: #7fcfb0 !important; opacity: 0.7; }
+.root .sysview .framework-term   { color: #7fcfb0 !important; }
+.root .sysview-arrow             { color: rgba(127, 207, 176, 0.60) !important; }
+.root .sysview-row:hover         { background: rgba(10, 22, 18, 0.58) !important; }
+
+/* Questions — dusty rose */
+.root .questions .section-label    { color: #e89090 !important; }
+.root .questions .section-subtitle { color: #c07070 !important; }
+.root .questions .gold-line        { background: #e89090 !important; opacity: 0.7; }
+.root .questions .framework-term   { color: #e89090 !important; }
+.root .questions .framework-sep    { color: rgba(232, 144, 144, 0.50) !important; }
+.root .q-item:hover::before        { background: rgba(20, 8, 8, 0.55) !important; }
+
+/* ── 16 · Hero text explicit ───────────────────────────────────── */
+.root .hero-title    { color: #f0f2fa; }
+.root .hero-subtitle { color: #8fa8d8; }
+.root .hero-body     { color: #8898c0; }
+.root .hero-body .highlight { color: #c4d4f8; }
+.root .hero-meta-label { color: #6878a0; }
+.root .hero-meta-value { color: #a4b4d4; }
+.root .hero-meta-dot   { background: rgba(90, 130, 210, 0.30); }
+.root .portrait-caption { color: #6878a0; }
+
+/* ── 17 · Section index numbers (bg watermarks) ────────────────── */
+.root .section-index { color: rgba(90, 130, 210, 0.16); }
+
+/* ── 18 · EVo SVG ──────────────────────────────────────────────── */
+.root .evo-node-g:hover .evo-circle {
+  fill: rgba(14, 22, 50, 0.90);
+  stroke: #7aaedd;
+}
+.root .evo-node-g:hover .evo-label { fill: #dde6fa; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CINEMATIC LAYOUT — additions to reflections.module.css
+   Paste these at the END of your existing reflections.module.css
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Cinematic section base ─────────────────────────────────────────── */
+.cin-section {
+  position: relative;
+  min-height: 200vh;
+  display: flex;
+  align-items: center;
+  padding: 100px 0 80px;
+  overflow: hidden;
+}
+
+/* Two-column layout: text left, diagram right (or reversed) */
+.cin-layout {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.cin-text-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.cin-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Word-split text block */
+.word-block p {
+  font-size: clamp(15px, 1.5vw, 17px);
+  line-height: 1.78;
+  color: rgba(210, 228, 255, 0.82);
+  margin-bottom: 18px;
+}
+
+/* Individual word span — animated by GSAP */
+.word {
+  display: inline-block;
+  will-change: opacity, transform, filter;
+}
+
+/* Stats row */
+.cin-stats {
+  display: flex;
+  gap: 36px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.cin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-number {
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-family: "Georgia", serif;
+  color: #7BAAD4;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  will-change: contents;
+}
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(120, 160, 200, 0.6);
+}
+
+/* Inline quote */
+.cin-quote {
+  font-family: "Georgia", serif;
+  font-size: clamp(18px, 2vw, 22px);
+  font-style: italic;
+  color: rgba(200, 225, 255, 0.70);
+  border-left: 2px solid rgba(100, 160, 220, 0.4);
+  padding-left: 20px;
+  margin: 8px 0 0;
+  line-height: 1.55;
+}
+
+/* ── Diagram float container ────────────────────────────────────────── */
+.diagram-float {
+  flex: 0 0 340px;
+  background: rgba(10, 20, 40, 0.48);
+  border: none;
+  border-radius: 16px;
+  padding: 28px 24px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: none;
+  will-change: opacity, transform;
+}
+
+/* ── Hero cinematic layout ──────────────────────────────────────────── */
+.cin-hero-inner {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.cin-hero-text {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Portrait — small, subtle */
+.hero-portrait-wrap {
+  flex: 0 0 200px;
+  will-change: transform;
+}
+
+.hero-portrait-frame {
+  position: relative;
+  width: 200px;
+  height: 260px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(80, 120, 180, 0.20);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
+}
+
+.hero-portrait-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(6, 14, 34, 0.7) 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Navigation dots ────────────────────────────────────────────────── */
+.nav-dots {
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.nav-dot-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s;
+  opacity: 0.5;
+}
+
+.nav-dot-wrap:hover,
+.nav-dot-active {
+  opacity: 1;
+}
+
+.nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(120, 175, 230, 0.5);
+  border: 1px solid rgba(120, 175, 230, 0.8);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.nav-dot-active .nav-dot {
+  width: 8px;
+  height: 8px;
+  background: rgba(120, 175, 230, 1);
+  box-shadow: 0 0 8px rgba(120, 175, 230, 0.6);
+}
+
+.nav-dot-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(150, 195, 235, 0.8);
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.nav-dot-wrap:hover .nav-dot-label,
+.nav-dot-active .nav-dot-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Questions section ──────────────────────────────────────────────── */
+.cin-questions-inner {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.q-item {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(80, 120, 180, 0.12);
+  width: 100%;
+  list-style: none;
+}
+
+.q-number {
+  font-size: 11px;
+  font-family: "Georgia", serif;
+  color: rgba(100, 150, 200, 0.5);
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.q-text {
+  font-size: clamp(15px, 1.5vw, 18px);
+  color: rgba(200, 225, 255, 0.75);
+  line-height: 1.55;
+  font-family: "Georgia", serif;
+}
+
+.cin-closing {
+  max-width: 640px;
+  text-align: center;
+  margin-top: 56px;
+}
+
+/* ── Belief map ─────────────────────────────────────────────────────── */
+.belief-map {
+  width: 100%;
+}
+
+.belief-map-title {
+  display: block;
+  font-family: "Georgia", serif;
+  font-size: 13px;
+  color: rgba(150, 195, 235, 0.7);
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.belief-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.belief-table-head,
+.belief-table-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(80, 120, 180, 0.12);
+}
+
+.belief-t-cell {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(100, 150, 200, 0.6);
+  text-align: center;
+}
+
+.belief-q-cell {
+  font-size: 11px;
+  color: rgba(160, 200, 240, 0.7);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.belief-a-cell {
+  font-size: 10px;
+  color: rgba(140, 185, 225, 0.65);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .cin-layout {
+    flex-direction: column;
+    gap: 40px;
+    padding: 0 24px;
+  }
+
+  .cin-hero-inner {
+    flex-direction: column-reverse;
+    gap: 32px;
+    padding: 0 24px;
+    text-align: center;
+    align-items: center;
+  }
+
+  .hero-portrait-wrap {
+    flex: 0 0 auto;
+  }
+
+  .hero-portrait-frame {
+    width: 140px;
+    height: 180px;
+  }
+
+  .diagram-float {
+    flex: none;
+    width: 100%;
+  }
+
+  .nav-dots {
+    display: flex;
+    flex-direction: row;
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: 18px;
+    transform: translateX(-50%);
+    gap: 10px;
+    align-items: center;
+    background: rgba(6, 14, 34, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 8px 16px;
+  }
+  .nav-dot-wrap {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-dot-label {
+    display: none;
+  }
+  .nav-dot {
+    width: 5px;
+    height: 5px;
+  }
+  .nav-dot-active .nav-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .belief-table-head,
+  .belief-table-row {
+    grid-template-columns: 1.2fr 1fr 1fr;
+  }
+
+  .belief-t-cell:nth-child(n+4),
+  .belief-a-cell:nth-child(n+4) {
+    display: none;
+  }
+
+  .cin-questions-inner {
+    padding: 0 24px;
+  }
+}
+/* ═══════════════════════════════════════════════════════════════════════
+   CINEMATIC LAYOUT — additions to reflections.module.css
+   Paste these at the END of your existing reflections.module.css
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Cinematic section base ─────────────────────────────────────────── */
+.cin-section {
+  position: relative;
+  min-height: 200vh;
+  display: flex;
+  align-items: center;
+  padding: 100px 0 80px;
+  overflow: hidden;
+}
+
+/* Two-column layout: text left, diagram right (or reversed) */
+.cin-layout {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.cin-text-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.cin-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Word-split text block */
+.word-block p {
+  font-size: clamp(15px, 1.5vw, 17px);
+  line-height: 1.78;
+  color: rgba(210, 228, 255, 0.82);
+  margin-bottom: 18px;
+}
+
+/* Individual word span — animated by GSAP */
+.word {
+  display: inline-block;
+  will-change: opacity, transform, filter;
+}
+
+/* Stats row */
+.cin-stats {
+  display: flex;
+  gap: 36px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.cin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-number {
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-family: "Georgia", serif;
+  color: #7BAAD4;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  will-change: contents;
+}
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(120, 160, 200, 0.6);
+}
+
+/* Inline quote */
+.cin-quote {
+  font-family: "Georgia", serif;
+  font-size: clamp(18px, 2vw, 22px);
+  font-style: italic;
+  color: rgba(200, 225, 255, 0.70);
+  border-left: 2px solid rgba(100, 160, 220, 0.4);
+  padding-left: 20px;
+  margin: 8px 0 0;
+  line-height: 1.55;
+}
+
+/* ── Diagram float container ────────────────────────────────────────── */
+.diagram-float {
+  flex: 0 0 340px;
+  background: rgba(10, 20, 40, 0.48);
+  border: none;
+  border-radius: 16px;
+  padding: 28px 24px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: none;
+  will-change: opacity, transform;
+}
+
+/* ── Hero cinematic layout ──────────────────────────────────────────── */
+.cin-hero-inner {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.cin-hero-text {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Portrait — small, subtle */
+.hero-portrait-wrap {
+  flex: 0 0 200px;
+  will-change: transform;
+}
+
+.hero-portrait-frame {
+  position: relative;
+  width: 200px;
+  height: 260px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(80, 120, 180, 0.20);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
+}
+
+.hero-portrait-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(6, 14, 34, 0.7) 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Navigation dots ────────────────────────────────────────────────── */
+.nav-dots {
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.nav-dot-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s;
+  opacity: 0.5;
+}
+
+.nav-dot-wrap:hover,
+.nav-dot-active {
+  opacity: 1;
+}
+
+.nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(120, 175, 230, 0.5);
+  border: 1px solid rgba(120, 175, 230, 0.8);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.nav-dot-active .nav-dot {
+  width: 8px;
+  height: 8px;
+  background: rgba(120, 175, 230, 1);
+  box-shadow: 0 0 8px rgba(120, 175, 230, 0.6);
+}
+
+.nav-dot-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(150, 195, 235, 0.8);
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.nav-dot-wrap:hover .nav-dot-label,
+.nav-dot-active .nav-dot-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Questions section ──────────────────────────────────────────────── */
+.cin-questions-inner {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.q-item {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(80, 120, 180, 0.12);
+  width: 100%;
+  list-style: none;
+}
+
+.q-number {
+  font-size: 11px;
+  font-family: "Georgia", serif;
+  color: rgba(100, 150, 200, 0.5);
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.q-text {
+  font-size: clamp(15px, 1.5vw, 18px);
+  color: rgba(200, 225, 255, 0.75);
+  line-height: 1.55;
+  font-family: "Georgia", serif;
+}
+
+.cin-closing {
+  max-width: 640px;
+  text-align: center;
+  margin-top: 56px;
+}
+
+/* ── Belief map ─────────────────────────────────────────────────────── */
+.belief-map {
+  width: 100%;
+}
+
+.belief-map-title {
+  display: block;
+  font-family: "Georgia", serif;
+  font-size: 13px;
+  color: rgba(150, 195, 235, 0.7);
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.belief-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.belief-table-head,
+.belief-table-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(80, 120, 180, 0.12);
+}
+
+.belief-t-cell {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(100, 150, 200, 0.6);
+  text-align: center;
+}
+
+.belief-q-cell {
+  font-size: 11px;
+  color: rgba(160, 200, 240, 0.7);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.belief-a-cell {
+  font-size: 10px;
+  color: rgba(140, 185, 225, 0.65);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .cin-layout {
+    flex-direction: column;
+    gap: 40px;
+    padding: 0 24px;
+  }
+
+  .cin-hero-inner {
+    flex-direction: column-reverse;
+    gap: 32px;
+    padding: 0 24px;
+    text-align: center;
+    align-items: center;
+  }
+
+  .hero-portrait-wrap {
+    flex: 0 0 auto;
+  }
+
+  .hero-portrait-frame {
+    width: 140px;
+    height: 180px;
+  }
+
+  .diagram-float {
+    flex: none;
+    width: 100%;
+  }
+
+  .nav-dots {
+    display: flex;
+    flex-direction: row;
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: 18px;
+    transform: translateX(-50%);
+    gap: 10px;
+    align-items: center;
+    background: rgba(6, 14, 34, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 8px 16px;
+  }
+  .nav-dot-wrap {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-dot-label {
+    display: none;
+  }
+  .nav-dot {
+    width: 5px;
+    height: 5px;
+  }
+  .nav-dot-active .nav-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .belief-table-head,
+  .belief-table-row {
+    grid-template-columns: 1.2fr 1fr 1fr;
+  }
+
+  .belief-t-cell:nth-child(n+4),
+  .belief-a-cell:nth-child(n+4) {
+    display: none;
+  }
+
+  .cin-questions-inner {
+    padding: 0 24px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SECTION 05 FIXES — compact c-lines, no outer dark bg, tight gaps
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Compact lines container — no background, tight spacing */
+.c-lines-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+/* c-line now same size as body text — NOT giant */
+.c-line {
+  font-size: clamp(14px, 1.4vw, 16px);
+  font-family: "Georgia", serif;
+  color: rgba(180, 210, 245, 0.70);
+  line-height: 1.6;
+  opacity: 0;
+  transform: translateY(10px);
+  /* GSAP animates opacity + translateY to visible state */
+}
+
+.c-line-em {
+  color: rgba(120, 185, 255, 0.95);
+  font-style: italic;
+}
+
+/* Footnote under the lines — same compact size */
+.consciousness-footnote {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: rgba(120, 160, 210, 0.55);
+  font-style: italic;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+/* Global gap control — sections have breathing room, but internals are tight */
+.cin-section {
+  padding: 80px 0 60px !important;
+}
+
+.cin-header {
+  gap: 6px !important;
+}
+
+.cin-text-col {
+  gap: 18px !important;
+}
+
+.word-block p {
+  margin-bottom: 12px !important;
+}
+
+.cin-body {
+  gap: 0 !important;
+}
+
+/* diagram-float keeps dark bg — this is the only element that should be dark */
+.diagram-float {
+  background: rgba(8, 18, 38, 0.62) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NEW ELEMENTS — curiosity lines, god block, q-groups, signature
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Curiosity opener line — one per section */
+.curiosity-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.curiosity-mark {
+  font-size: 11px;
+  color: rgba(100, 160, 220, 0.5);
+  font-family: "Georgia", serif;
+  flex-shrink: 0;
+  width: 14px;
+}
+
+.curiosity-text {
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(100, 160, 220, 0.55);
+  font-style: italic;
+}
+
+/* Religion — calm God questions block */
+.religion-god-block {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(80, 120, 180, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.god-block-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(100, 150, 200, 0.45);
+}
+
+/* Questions — group label */
+.q-group-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(100, 150, 200, 0.45);
+  margin-bottom: 4px;
+  margin-top: 0;
+  width: 100%;
+  text-align: left;
+}
+
+/* Page signature */
+.page-signature {
+  font-family: "Georgia", serif;
+  font-size: 16px;
+  color: rgba(160, 200, 240, 0.65);
+  margin: 20px 0 4px;
+  font-style: italic;
+  text-align: center;
+}
+
+.page-signature-sub {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(100, 150, 200, 0.38);
+  text-align: center;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CINEMATIC LAYOUT — additions to reflections.module.css
+   Paste these at the END of your existing reflections.module.css
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Cinematic section base ─────────────────────────────────────────── */
+.cin-section {
+  position: relative;
+  min-height: 200vh;
+  display: flex;
+  align-items: center;
+  padding: 100px 0 80px;
+  overflow: hidden;
+}
+
+/* Two-column layout: text left, diagram right (or reversed) */
+.cin-layout {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.cin-text-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.cin-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Word-split text block */
+.word-block p {
+  font-size: clamp(15px, 1.5vw, 17px);
+  line-height: 1.78;
+  color: rgba(210, 228, 255, 0.82);
+  margin-bottom: 18px;
+}
+
+/* Individual word span — animated by GSAP */
+.word {
+  display: inline-block;
+  will-change: opacity, transform, filter;
+}
+
+/* Stats row */
+.cin-stats {
+  display: flex;
+  gap: 36px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.cin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-number {
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-family: "Georgia", serif;
+  color: #7BAAD4;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  will-change: contents;
+}
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(120, 160, 200, 0.6);
+}
+
+/* Inline quote */
+.cin-quote {
+  font-family: "Georgia", serif;
+  font-size: clamp(18px, 2vw, 22px);
+  font-style: italic;
+  color: rgba(200, 225, 255, 0.70);
+  border-left: 2px solid rgba(100, 160, 220, 0.4);
+  padding-left: 20px;
+  margin: 8px 0 0;
+  line-height: 1.55;
+}
+
+/* ── Diagram float container ────────────────────────────────────────── */
+.diagram-float {
+  flex: 0 0 340px;
+  background: rgba(10, 20, 40, 0.48);
+  border: none;
+  border-radius: 16px;
+  padding: 28px 24px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: none;
+  will-change: opacity, transform;
+}
+
+/* ── Hero cinematic layout ──────────────────────────────────────────── */
+.cin-hero-inner {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.cin-hero-text {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Portrait — small, subtle */
+.hero-portrait-wrap {
+  flex: 0 0 200px;
+  will-change: transform;
+}
+
+.hero-portrait-frame {
+  position: relative;
+  width: 200px;
+  height: 260px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(80, 120, 180, 0.20);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
+}
+
+.hero-portrait-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(6, 14, 34, 0.7) 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Navigation dots ────────────────────────────────────────────────── */
+.nav-dots {
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.nav-dot-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s;
+  opacity: 0.5;
+}
+
+.nav-dot-wrap:hover,
+.nav-dot-active {
+  opacity: 1;
+}
+
+.nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(120, 175, 230, 0.5);
+  border: 1px solid rgba(120, 175, 230, 0.8);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.nav-dot-active .nav-dot {
+  width: 8px;
+  height: 8px;
+  background: rgba(120, 175, 230, 1);
+  box-shadow: 0 0 8px rgba(120, 175, 230, 0.6);
+}
+
+.nav-dot-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(150, 195, 235, 0.8);
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.nav-dot-wrap:hover .nav-dot-label,
+.nav-dot-active .nav-dot-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Questions section ──────────────────────────────────────────────── */
+.cin-questions-inner {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.q-item {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(80, 120, 180, 0.12);
+  width: 100%;
+  list-style: none;
+}
+
+.q-number {
+  font-size: 11px;
+  font-family: "Georgia", serif;
+  color: rgba(100, 150, 200, 0.5);
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.q-text {
+  font-size: clamp(15px, 1.5vw, 18px);
+  color: rgba(200, 225, 255, 0.75);
+  line-height: 1.55;
+  font-family: "Georgia", serif;
+}
+
+.cin-closing {
+  max-width: 640px;
+  text-align: center;
+  margin-top: 56px;
+}
+
+/* ── Belief map ─────────────────────────────────────────────────────── */
+.belief-map {
+  width: 100%;
+}
+
+.belief-map-title {
+  display: block;
+  font-family: "Georgia", serif;
+  font-size: 13px;
+  color: rgba(150, 195, 235, 0.7);
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.belief-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.belief-table-head,
+.belief-table-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(80, 120, 180, 0.12);
+}
+
+.belief-t-cell {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(100, 150, 200, 0.6);
+  text-align: center;
+}
+
+.belief-q-cell {
+  font-size: 11px;
+  color: rgba(160, 200, 240, 0.7);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.belief-a-cell {
+  font-size: 10px;
+  color: rgba(140, 185, 225, 0.65);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .cin-layout {
+    flex-direction: column;
+    gap: 40px;
+    padding: 0 24px;
+  }
+
+  .cin-hero-inner {
+    flex-direction: column-reverse;
+    gap: 32px;
+    padding: 0 24px;
+    text-align: center;
+    align-items: center;
+  }
+
+  .hero-portrait-wrap {
+    flex: 0 0 auto;
+  }
+
+  .hero-portrait-frame {
+    width: 140px;
+    height: 180px;
+  }
+
+  .diagram-float {
+    flex: none;
+    width: 100%;
+  }
+
+  .nav-dots {
+    display: flex;
+    flex-direction: row;
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: 18px;
+    transform: translateX(-50%);
+    gap: 10px;
+    align-items: center;
+    background: rgba(6, 14, 34, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 8px 16px;
+  }
+  .nav-dot-wrap {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-dot-label {
+    display: none;
+  }
+  .nav-dot {
+    width: 5px;
+    height: 5px;
+  }
+  .nav-dot-active .nav-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .belief-table-head,
+  .belief-table-row {
+    grid-template-columns: 1.2fr 1fr 1fr;
+  }
+
+  .belief-t-cell:nth-child(n+4),
+  .belief-a-cell:nth-child(n+4) {
+    display: none;
+  }
+
+  .cin-questions-inner {
+    padding: 0 24px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SECTION 05 FIXES — compact c-lines, no outer dark bg, tight gaps
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Compact lines container — no background, tight spacing */
+.c-lines-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+/* c-line now same size as body text — NOT giant */
+.c-line {
+  font-size: clamp(14px, 1.4vw, 16px);
+  font-family: "Georgia", serif;
+  color: rgba(180, 210, 245, 0.70);
+  line-height: 1.6;
+  opacity: 0;
+  transform: translateY(10px);
+  /* GSAP animates opacity + translateY to visible state */
+}
+
+.c-line-em {
+  color: rgba(120, 185, 255, 0.95);
+  font-style: italic;
+}
+
+/* Footnote under the lines — same compact size */
+.consciousness-footnote {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: rgba(120, 160, 210, 0.55);
+  font-style: italic;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+/* Global gap control — sections have breathing room, but internals are tight */
+.cin-section {
+  padding: 80px 0 60px !important;
+}
+
+.cin-header {
+  gap: 6px !important;
+}
+
+.cin-text-col {
+  gap: 18px !important;
+}
+
+.word-block p {
+  margin-bottom: 12px !important;
+}
+
+.cin-body {
+  gap: 0 !important;
+}
+
+/* diagram-float keeps dark bg — this is the only element that should be dark */
+.diagram-float {
+  background: rgba(8, 18, 38, 0.62) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NEW ELEMENTS — curiosity lines, god block, q-groups, signature
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Curiosity opener line — one per section */
+.curiosity-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.curiosity-mark {
+  font-size: 11px;
+  color: rgba(100, 160, 220, 0.5);
+  font-family: "Georgia", serif;
+  flex-shrink: 0;
+  width: 14px;
+}
+
+.curiosity-text {
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(100, 160, 220, 0.55);
+  font-style: italic;
+}
+
+/* Religion — calm God questions block */
+.religion-god-block {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(80, 120, 180, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.god-block-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(100, 150, 200, 0.45);
+}
+
+/* Questions — group label */
+.q-group-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(100, 150, 200, 0.45);
+  margin-bottom: 4px;
+  margin-top: 0;
+  width: 100%;
+  text-align: left;
+}
+
+/* Page signature */
+.page-signature {
+  font-family: "Georgia", serif;
+  font-size: 16px;
+  color: rgba(160, 200, 240, 0.65);
+  margin: 20px 0 4px;
+  font-style: italic;
+  text-align: center;
+}
+
+.page-signature-sub {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(100, 150, 200, 0.38);
+  text-align: center;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ALIGNMENT + CONSCIOUSNESS GAP FIXES
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Top-aligned layout variant — used for consciousness so text
+   doesn't float to center against the shorter loop diagram */
+.cin-layout-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 64px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+/* Fix default cin-layout to also top-align — prevents vertical
+   centering gaps when one column is shorter than the other */
+.cin-layout {
+  align-items: flex-start !important;
+}
+
+/* c-line: use visibility:hidden not opacity:0 as initial state
+   so it doesn't create invisible but space-consuming dead zones.
+   GSAP will animate from opacity 0 → 1 on scroll, but the
+   element won't push layout around when invisible. */
+.c-lines-compact {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.c-line {
+  /* Override the opacity:0 default — GSAP sets this via inline style.
+     The element exists in layout; GSAP controls the fade. */
+  font-size: clamp(14px, 1.35vw, 15.5px) !important;
+  line-height: 1.65;
+  color: rgba(160, 200, 240, 0.72);
+  font-family: "Georgia", serif;
+}
+
+/* Tighter internal spacing for all sections */
+.cin-section {
+  padding: 72px 0 56px !important;
+}
+
+.cin-header {
+  gap: 5px !important;
+  margin-bottom: 4px;
+}
+
+.cin-text-col {
+  gap: 14px !important;
+}
+
+.word-block p {
+  margin-bottom: 10px !important;
+  line-height: 1.72 !important;
+}
+
+/* Section index number — top-left corner, not interfering with layout */
+.section-index {
+  position: absolute;
+  top: 28px;
+  left: 48px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: rgba(80, 120, 180, 0.22);
+  font-family: "Georgia", serif;
+  pointer-events: none;
+}
+
+/* diagram-float top-aligns with text col */
+.diagram-float {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+@media (max-width: 900px) {
+  .cin-layout-top {
+    flex-direction: column;
+    gap: 32px;
+    padding: 0 24px;
+  }
+  .section-index {
+    left: 24px;
+  }
+}
+/* =====================================================================
+   ANIMATION PATCH — hero entrance only, everything else static
+   ===================================================================== */
+
+/* ─── KEYFRAMES (hero only) ──────────────────────────────────────────── */
+
+@keyframes cosmicRise {
+  0%   { opacity: 0; transform: translateY(44px) scale(0.96); filter: blur(14px); }
+  60%  { filter: blur(2px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
+}
+
+@keyframes voidDrift {
+  0%   { opacity: 0; transform: translateY(28px); filter: blur(8px); }
+  100% { opacity: 1; transform: translateY(0);    filter: blur(0px); }
+}
+
+@keyframes voidReveal {
+  0%   { opacity: 0; transform: scale(1.04); filter: blur(18px) brightness(1.3); }
+  70%  { filter: blur(3px); }
+  100% { opacity: 1; transform: scale(1);    filter: blur(0px) brightness(1); }
+}
+
+/* ─── HERO entrance animations (.root prefix correct here) ───────────── */
+
+.root .hero-title {
+  animation: cosmicRise 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+.root .hero-subtitle {
+  animation: voidDrift 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.38s both;
+}
+
+.root .hero-body {
+  animation: cosmicRise 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
+}
+
+.root .hero-meta {
+  animation: cosmicRise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.72s both;
+}
+
+.root .portrait-frame {
+  animation: voidReveal 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+/* ─── NAV DOTS — active dot becomes a vertical line ─────────────────── */
+
+.nav-dot-active .nav-dot {
+  width: 2px;
+  height: 20px;
+  border-radius: 2px;
+  background: rgba(160,210,255,0.9);
+  border-color: transparent;
+  box-shadow: 0 0 8px rgba(120,180,240,0.4);
+  transition: width 0.35s ease, height 0.35s ease, border-radius 0.35s ease,
+              background 0.35s ease, box-shadow 0.35s ease;
+}
+
+.nav-dot {
+  transition: width 0.35s ease, height 0.35s ease, border-radius 0.35s ease,
+              background 0.35s ease, box-shadow 0.35s ease;
+}
+
+.nav-dot-wrap:hover .nav-dot {
+  background: rgba(140,195,250,0.75);
+  box-shadow: 0 0 6px rgba(120,180,240,0.35);
+}
+
+.nav-dot-label {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* ─── REDUCED MOTION ─────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .root .hero-title,
+  .root .hero-subtitle,
+  .root .hero-body,
+  .root .hero-meta  { animation: fadeIn 0.5s ease both; }
+  .root .portrait-frame { animation: fadeIn 0.6s ease both; }
+  .nav-dot-active .nav-dot { width: 2px; height: 20px; }
+}
+
+/* ── Sysview animated pulse dots ───────────────────────────────── */
+.sysview-row {
+  position: relative;
+}
+.sysview-pulse {
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+
+/* ── Fixed viewport blur overlay — 30% top / 40% clear / 30% bottom ── */
+/* Sits above content, below nav. Only text is in its path.              */
+/* Background canvas is a sibling behind everything — stays sharp.       */
+.content-wrap {
+  position: relative;
+  z-index: 1;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   UNIFORM SPACING SYSTEM — single source of truth, overrides everything.
+   Section-to-section: even. Inside each section: constant.
+════════════════════════════════════════════════════════════════════ */
+
+/* ── Section outer padding — equal top & bottom on every section ── */
+.cin-section {
+  padding: 140px 0 140px !important;
+  align-items: flex-start !important;
+}
+
+/* Hero gets a little more room at top for portrait */
+.hero {
+  padding-top: 100px !important;
+  padding-bottom: 140px !important;
+}
+
+/* Questions section — centered, no two-col so tighter width */
+#questions {
+  padding: 140px 0 140px !important;
+}
+
+/* ── Two-column layout — constant column gap, centered on page ── */
+.cin-layout,
+.cin-layout-top {
+  max-width: 1200px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  gap: 72px !important;
+  padding: 0 56px !important;
+  align-items: flex-start !important;
+}
+
+/* ── Text column — constant gap between every block inside ── */
+.cin-text-col {
+  gap: 24px !important;
+}
+
+/* ── Header block — label / title / subtitle / gold-line ── */
+.cin-header {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  margin-bottom: 0 !important;
+}
+
+/* Gold line: a bit of breathing room above and below */
+.gold-line {
+  margin-top: 8px !important;
+  margin-bottom: 0 !important;
+}
+
+/* ── Body text — consistent paragraph spacing ── */
+.word-block p {
+  margin-bottom: 16px !important;
+  line-height: 1.76 !important;
+}
+.word-block p:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* ── Stats row — consistent spacing ── */
+.cin-stats {
+  gap: 40px !important;
+  margin-top: 0 !important;
+}
+
+/* ── Blockquote ── */
+.cin-quote {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* ── Religion god block ── */
+.religion-god-block {
+  margin-top: 0 !important;
+}
+
+/* ── Questions list ── */
+.questions-list {
+  gap: 12px !important;
+}
+.q-item {
+  padding: 14px 0 !important;
+}
+.q-group-label {
+  margin-top: 40px !important;
+  margin-bottom: 8px !important;
+}
+.q-group-label:first-of-type {
+  margin-top: 0 !important;
+}
+
+/* ── Closing line ── */
+.cin-closing {
+  margin-top: 0 !important;
+  padding-top: 24px !important;
+  border-top: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+/* ── Page epigram bottom ── */
+.page-epigram {
+  padding: 80px 0 100px !important;
+}
+
+/* ── Mobile: collapse two-column padding ── */
+@media (max-width: 900px) {
+  .cin-section {
+    padding: 80px 0 80px !important;
+  }
+  .cin-layout,
+  .cin-layout-top {
+    padding: 0 24px !important;
+    gap: 40px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SECTION ANIMATIONS — concept-specific, scroll-triggered
+   Sections get .anim-active class from IntersectionObserver in JS.
+   Everything below is paused until that class is present.
+════════════════════════════════════════════════════════════════════ */
+
+/* ── Keyframes ──────────────────────────────────────────────────── */
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideLeftFade {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideRightFade {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes drawLine {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(12px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pulseRing {
+  0%   { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+@keyframes orbitSpin {
+  from { transform: rotateZ(0deg); }
+  to   { transform: rotateZ(360deg); }
+}
+@keyframes orbitSpin2 {
+  from { transform: rotateX(65deg) rotateZ(0deg); }
+  to   { transform: rotateX(65deg) rotateZ(360deg); }
+}
+@keyframes orbitSpin3 {
+  from { transform: rotateY(70deg) rotateZ(0deg); }
+  to   { transform: rotateY(70deg) rotateZ(360deg); }
+}
+@keyframes neuralFire {
+  0%   { box-shadow: 0 0 0 0 rgba(100,180,255,0.7); }
+  60%  { box-shadow: 0 0 0 18px rgba(100,180,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(100,180,255,0); }
+}
+@keyframes glitchShift {
+  0%,95%,100% { clip-path: none; transform: none; color: inherit; }
+  96%  { clip-path: inset(20% 0 50% 0); transform: translateX(-4px); color: #7ff; }
+  97%  { clip-path: inset(60% 0 10% 0); transform: translateX(4px);  color: #f7a; }
+  98%  { clip-path: none; transform: none; }
+}
+@keyframes drawStroke {
+  from { stroke-dashoffset: 800; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes drawStrokeNode {
+  from { opacity: 0; transform: scale(0); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes typewriterCursor {
+  0%,49% { opacity: 1; }
+  50%,100% { opacity: 0; }
+}
+@keyframes driftUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes layerSlideIn {
+  from { opacity: 0; transform: translateX(36px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes rowBuildIn {
+  from { opacity: 0; transform: translateX(-20px); max-height: 0; }
+  to   { opacity: 1; transform: translateX(0); max-height: 120px; }
+}
+@keyframes beliefRowIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes heroTitleIn {
+  from { opacity: 0; transform: translateY(40px) skewY(2deg); filter: blur(8px); }
+  to   { opacity: 1; transform: translateY(0) skewY(0deg); filter: blur(0px); }
+}
+@keyframes goldLineDraw {
+  from { transform: scaleX(0); transform-origin: left; }
+  to   { transform: scaleX(1); transform-origin: left; }
+}
+@keyframes metaItemIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes questionItemIn {
+  from { opacity: 0; transform: translateY(20px) translateX(-8px); }
+  to   { opacity: 1; transform: translateY(0) translateX(0); }
+}
+
+
+/* ════════════════════════════════════════
+   HERO — title sweep + meta stagger
+════════════════════════════════════════ */
+.hero-title-anim {
+  opacity: 0;
+  animation: heroTitleIn 1s cubic-bezier(0.16,1,0.3,1) 0.2s forwards;
+}
+.hero-meta-anim {
+  opacity: 0;
+}
+.hero-meta-anim:nth-child(1) { animation: metaItemIn 0.5s ease 0.9s forwards; }
+.hero-meta-anim:nth-child(2) { animation: metaItemIn 0.5s ease 1.05s forwards; }
+.hero-meta-anim:nth-child(3) { animation: metaItemIn 0.5s ease 1.1s forwards; }
+.hero-meta-anim:nth-child(4) { animation: metaItemIn 0.5s ease 1.15s forwards; }
+.hero-meta-anim:nth-child(5) { animation: metaItemIn 0.5s ease 1.2s forwards; }
+
+/* ════════════════════════════════════════
+   S01 LIFE — atom orbits
+════════════════════════════════════════ */
+.atom-widget {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 28px;
+}
+.atom-nucleus-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.atom-nucleus {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.atom-core {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #a0d4ff 0%, #4a9aff 60%, #1a4a8a 100%);
+  box-shadow: 0 0 16px rgba(100,180,255,0.6);
+  position: relative;
+  z-index: 2;
+}
+.atom-core::before, .atom-core::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(100,180,255,0.15);
+  animation: pulseRing 2s ease-out infinite;
+}
+.atom-core::after { animation-delay: 1s; }
+
+.atom-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(100,180,255,0.2);
+}
+.atom-ring-1 {
+  animation: orbitSpin 3.2s linear infinite;
+  width: 60px; height: 60px;
+  top: 10px; left: 10px;
+}
+.atom-ring-2 {
+  animation: orbitSpin2 5.1s linear infinite;
+  width: 72px; height: 72px;
+  top: 4px; left: 4px;
+  border-color: rgba(80,200,160,0.18);
+}
+.atom-ring-3 {
+  animation: orbitSpin3 7.4s linear infinite;
+  width: 78px; height: 78px;
+  top: 1px; left: 1px;
+  border-color: rgba(160,100,240,0.15);
+}
+.atom-electron {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7BAAD4;
+  box-shadow: 0 0 6px rgba(120,180,255,0.8);
+  top: -2.5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.atom-ring-2 .atom-electron { background: #50c8a0; box-shadow: 0 0 6px rgba(80,200,160,0.8); }
+.atom-ring-3 .atom-electron { background: #a064f0; box-shadow: 0 0 6px rgba(160,100,240,0.8); }
+
+/* ════════════════════════════════════════
+   S02 EVOLUTION — animated branch lines
+════════════════════════════════════════ */
+.evo-branch-line {
+  stroke-dasharray: 800;
+  stroke-dashoffset: 800;
+}
+.anim-active .evo-branch-line {
+  animation: drawStroke 1.8s cubic-bezier(0.4,0,0.2,1) 0.2s forwards;
+}
+.evo-node-circle {
+  opacity: 0;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.anim-active .evo-node-circle { animation: drawStrokeNode 0.4s ease forwards; }
+.anim-active .evo-node-0 { animation-delay: 0.3s; }
+.anim-active .evo-node-1 { animation-delay: 0.6s; }
+.anim-active .evo-node-2 { animation-delay: 0.85s; }
+.anim-active .evo-node-3 { animation-delay: 1.05s; }
+.anim-active .evo-node-4 { animation-delay: 1.22s; }
+.anim-active .evo-node-5 { animation-delay: 1.38s; }
+
+/* ════════════════════════════════════════
+   S03 REALITY — layer slide + glitch quote
+════════════════════════════════════════ */
+.pred-layer-anim {
+  opacity: 0;
+}
+.anim-active .pred-layer-anim {
+  animation: layerSlideIn 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.anim-active .pred-layer-anim:nth-child(1) { animation-delay: 0.1s; }
+.anim-active .pred-layer-anim:nth-child(2) { animation-delay: 0.26s; }
+.anim-active .pred-layer-anim:nth-child(3) { animation-delay: 0.40s; }
+.anim-active .pred-layer-anim:nth-child(4) { animation-delay: 0.52s; }
+.anim-active .pred-layer-anim:nth-child(5) { animation-delay: 0.62s; }
+
+.cin-quote-glitch {
+  animation: glitchShift 6s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════
+   S04 RELIGION — belief rows + god block glow
+════════════════════════════════════════ */
+.belief-row-anim {
+  opacity: 0;
+}
+.anim-active .belief-row-anim {
+  animation: beliefRowIn 0.55s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.anim-active .belief-row-anim:nth-child(1) { animation-delay: 0.2s; }
+.anim-active .belief-row-anim:nth-child(2) { animation-delay: 0.34s; }
+.anim-active .belief-row-anim:nth-child(3) { animation-delay: 0.46s; }
+.anim-active .belief-row-anim:nth-child(4) { animation-delay: 0.56s; }
+.anim-active .belief-row-anim:nth-child(5) { animation-delay: 0.64s; }
+
+.god-block-pulse {
+  position: relative;
+}
+.god-block-pulse::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,200,70,0.08) 0%, transparent 70%);
+  animation: fadeIn 1.5s ease 0.8s forwards;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ════════════════════════════════════════
+   S05 CONSCIOUSNESS — c-lines stagger + neural spark
+════════════════════════════════════════ */
+.c-line-anim {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: none;
+}
+.anim-active .c-line-anim {
+  animation: slideUpFade 0.55s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.anim-active .c-line-anim:nth-child(1) { animation-delay: 0.1s; }
+.anim-active .c-line-anim:nth-child(2) { animation-delay: 0.30s; }
+.anim-active .c-line-anim:nth-child(3) { animation-delay: 0.48s; }
+.anim-active .c-line-anim:nth-child(4) { animation-delay: 0.64s; }
+.anim-active .c-line-footnote-anim {
+  animation: fadeIn 0.7s ease 0.9s forwards;
+}
+.c-line-footnote-anim { opacity: 0; }
+
+/* Neural spark widget */
+.neural-spark {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.neural-node {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(100,160,255,0.9);
+  box-shadow: 0 0 12px rgba(100,160,255,0.6);
+  animation: neuralFire 2.4s ease-out infinite;
+}
+.neural-node:nth-child(2) { animation-delay: 0.8s; background: rgba(120,200,180,0.9); box-shadow: 0 0 12px rgba(120,200,180,0.6); margin: 0 16px; }
+.neural-node:nth-child(3) { animation-delay: 1.6s; background: rgba(180,120,255,0.9); box-shadow: 0 0 12px rgba(180,120,255,0.6); }
+
+/* ════════════════════════════════════════
+   S06 SYSTEM VIEW — rows build in staggered
+════════════════════════════════════════ */
+.sysview-row-anim {
+  opacity: 0;
+}
+.anim-active .sysview-row-anim {
+  animation: rowBuildIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.anim-active .sysview-row-anim:nth-child(1) { animation-delay: 0.05s; }
+.anim-active .sysview-row-anim:nth-child(2) { animation-delay: 0.20s; }
+.anim-active .sysview-row-anim:nth-child(3) { animation-delay: 0.34s; }
+.anim-active .sysview-row-anim:nth-child(4) { animation-delay: 0.46s; }
+.anim-active .sysview-row-anim:nth-child(5) { animation-delay: 0.57s; }
+.anim-active .sysview-row-anim:nth-child(6) { animation-delay: 0.66s; }
+.anim-active .sysview-row-anim:nth-child(7) { animation-delay: 0.74s; }
+
+/* ════════════════════════════════════════
+   S07 QUESTIONS — drift in staggered
+════════════════════════════════════════ */
+.q-item-anim {
+  opacity: 0;
+}
+.anim-active .q-item-anim {
+  animation: questionItemIn 0.55s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+/* Stagger indices applied inline via style */
+
+/* Closing line cursor */
+.closing-cursor::after {
+  content: '|';
+  display: inline-block;
+  margin-left: 3px;
+  animation: typewriterCursor 1s step-end infinite;
+  color: rgba(100,180,255,0.6);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CONCEPT WIDGETS — atom orbits (S01), neural sparks (S05)
+   Pure CSS, no JS needed, always visible
+════════════════════════════════════════════════════════════════════ */
+
+@keyframes orbitSpin  { to { transform: rotate(360deg); } }
+@keyframes orbitSpin2 { to { transform: rotateX(65deg) rotateZ(360deg); } }
+@keyframes orbitSpin3 { to { transform: rotateY(70deg) rotateZ(360deg); } }
+@keyframes pulseRing  { to { transform: scale(2.4); opacity: 0; } }
+@keyframes neuralFire {
+  0%   { box-shadow: 0 0 0 0 currentColor; }
+  70%  { box-shadow: 0 0 0 20px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes glitchLoop {
+  0%,92%,100% { clip-path:none; transform:none; }
+  93% { clip-path:inset(18% 0 55% 0); transform:translateX(-5px); color:#7ff; }
+  94% { clip-path:inset(58% 0 12% 0); transform:translateX(5px);  color:#f7a; }
+  95% { clip-path:none; transform:none; }
+}
+@keyframes closingBlink {
+  0%,49%  { opacity:1; }
+  50%,100%{ opacity:0; }
+}
+
+/* Atom widget */
+.atom-widget {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0 18px;
+}
+.atom-scene {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+.atom-core {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #c0e0ff 0%, #5aabff 55%, #1a4a9a 100%);
+  box-shadow: 0 0 20px rgba(90,170,255,0.7), 0 0 40px rgba(90,170,255,0.3);
+  z-index: 3;
+}
+.atom-pulse {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) scale(1);
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(90,170,255,0.5);
+  animation: pulseRing 2s ease-out infinite;
+}
+.atom-pulse:nth-child(3) { animation-delay: 1s; }
+.atom-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(90,170,255,0.22);
+}
+.atom-ring-1 {
+  width: 64px; height: 64px;
+  margin: -32px 0 0 -32px;
+  animation: orbitSpin 3.4s linear infinite;
+}
+.atom-ring-2 {
+  width: 80px; height: 80px;
+  margin: -40px 0 0 -40px;
+  border-color: rgba(80,210,160,0.18);
+  animation: orbitSpin2 5.2s linear infinite;
+}
+.atom-ring-3 {
+  width: 92px; height: 92px;
+  margin: -46px 0 0 -46px;
+  border-color: rgba(170,100,255,0.15);
+  animation: orbitSpin3 7.8s linear infinite;
+}
+.atom-electron {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  top: -3px; left: 50%;
+  transform: translateX(-50%);
+  background: #7BBFFF;
+  box-shadow: 0 0 8px rgba(120,190,255,0.9);
+}
+.atom-ring-2 .atom-electron { background: #50d4a0; box-shadow: 0 0 8px rgba(80,212,160,0.9); }
+.atom-ring-3 .atom-electron { background: #b070ff; box-shadow: 0 0 8px rgba(176,112,255,0.9); }
+
+/* Neural spark widget */
+.neural-spark {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 0 12px;
+}
+.neural-node {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+}
+.neural-node-1 {
+  background: rgba(100,160,255,0.9);
+  box-shadow: 0 0 0 0 rgba(100,160,255,0.6);
+  color: rgba(100,160,255,0.6);
+  animation: neuralFire 2.4s ease-out infinite;
+}
+.neural-node-2 {
+  background: rgba(80,210,170,0.9);
+  box-shadow: 0 0 0 0 rgba(80,210,170,0.6);
+  color: rgba(80,210,170,0.6);
+  animation: neuralFire 2.4s ease-out 0.8s infinite;
+}
+.neural-node-3 {
+  background: rgba(180,110,255,0.9);
+  box-shadow: 0 0 0 0 rgba(180,110,255,0.6);
+  color: rgba(180,110,255,0.6);
+  animation: neuralFire 2.4s ease-out 1.6s infinite;
+}
+
+/* Quote glitch — applied directly to .cin-quote */
+.cin-quote { animation: glitchLoop 7s ease-in-out infinite; }
+
+/* Closing cursor */
+.closing-cursor::after {
+  content: '|';
+  margin-left: 3px;
+  animation: closingBlink 1s step-end infinite;
+  color: rgba(100,180,255,0.5);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   QUESTION SPIRAL — S07 animated diagram
+════════════════════════════════════════════════════════════════════ */
+
+@keyframes qs-spin    { from { transform: rotate(0deg);    } to { transform: rotate(360deg);  } }
+@keyframes qs-spinRev { from { transform: rotate(0deg);    } to { transform: rotate(-360deg); } }
+
+/* ? glyph stroke draws in on scroll reveal via GSAP */
+.qs-stroke {
+  stroke-dasharray: 90;
+  stroke-dashoffset: 90;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1);
+}
+/* Dot fades in after stroke */
+.qs-dot {
+  opacity: 0;
+  transition: opacity 0.5s ease 1.1s;
+}
+/* When spiral wrapper is revealed by GSAP, trigger these */
+[data-anim="diagram"] .qs-stroke  { stroke-dashoffset: 0;  }
+[data-anim="diagram"] .qs-dot     { opacity: 1; }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   DIAGRAM CARD CLEANUP — single transparent card, no inner dark boxes
+   All !important to beat the many earlier conflicting declarations.
+════════════════════════════════════════════════════════════════════ */
+
+/* ── Outer card: single, unified, transparent ── */
+.diagram-float {
+  background: rgba(12, 24, 54, 0.22) !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ── Flow nodes — no inner card ── */
+.root .flow-node {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.root .flow-node-circle {
+  background: transparent !important;
+  border-color: rgba(90, 130, 210, 0.22) !important;
+  box-shadow: none !important;
+}
+.root .flow-node:hover {
+  background: transparent !important;
+}
+.root .flow-node:hover .flow-node-circle {
+  background: transparent !important;
+  border-color: rgba(110, 200, 120, 0.40) !important;
+}
+
+/* ── Pred layers — no inner boxes ── */
+.root .pred-layer {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(90, 130, 210, 0.10) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.root .pred-layer:hover {
+  background: transparent !important;
+  border-color: rgba(90, 130, 210, 0.10) !important;
+}
+
+/* ── Belief table — no row backgrounds or strong borders ── */
+.belief-table-head,
+.belief-table-row {
+  border-bottom-color: rgba(80, 120, 180, 0.10) !important;
+  background: transparent !important;
+}
+.belief-a-cell,
+.belief-q-cell,
+.belief-t-cell {
+  background: transparent !important;
+}
+
+/* ── Sysview rows — no dark backgrounds ── */
+.root .sysview-row {
+  background: transparent !important;
+  border-bottom-color: rgba(90, 130, 210, 0.10) !important;
+}
+.root .sysview-row:first-child {
+  border-top-color: rgba(90, 130, 210, 0.10) !important;
+}
+.root .sysview-row:hover {
+  background: rgba(90, 130, 210, 0.05) !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   FINAL diagram-float — single card, properly dark, no outline
+════════════════════════════════════════════════════════════════════ */
+.diagram-float {
+  background: rgba(8, 16, 42, 0.72) !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  flex: 0 0 340px !important;
+  border-radius: 14px !important;
+  padding: 28px 24px !important;
+  will-change: opacity, transform !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   TEXT COLOR SYSTEM — complete, readable, per-section palette
+   All !important to win the cascade over earlier scattered rules.
+════════════════════════════════════════════════════════════════════ */
+
+/* ── Global base text ── */
+.word-block p {
+  color: rgba(205, 222, 248, 0.88) !important;
+  line-height: 1.80 !important;
+}
+
+/* ── Hero ── */
+.hero-title     { color: #EEF2FF !important; }
+.hero-body p    { color: rgba(190, 210, 245, 0.82) !important; }
+.hero-meta-label { color: rgba(140, 170, 215, 0.6) !important; }
+.hero-meta-value { color: rgba(185, 210, 248, 0.85) !important; }
+
+/* ── Section label (e.g. "Section 01") — per-section accent ── */
+.root #life         .section-label { color: #72d490 !important; }
+.root #evolution    .section-label { color: #7ec4f0 !important; }
+.root #reality      .section-label { color: #c49cf5 !important; }
+.root #religion     .section-label { color: #f0c87a !important; }
+.root #consciousness .section-label{ color: #90c8f8 !important; }
+.root #sysview      .section-label { color: #72dbb8 !important; }
+.root #questions    .section-label { color: #f09898 !important; }
+
+/* ── Section title (h2) — warm near-white, slightly per-section tinted ── */
+.section-title { color: #EEF2FF !important; }
+
+/* ── Section subtitle — readable mid-tone, per-section tint ── */
+.root #life         .section-subtitle { color: rgba(114, 212, 144, 0.72) !important; }
+.root #evolution    .section-subtitle { color: rgba(126, 196, 240, 0.72) !important; }
+.root #reality      .section-subtitle { color: rgba(196, 156, 245, 0.72) !important; }
+.root #religion     .section-subtitle { color: rgba(240, 200, 122, 0.72) !important; }
+.root #consciousness .section-subtitle{ color: rgba(144, 200, 248, 0.72) !important; }
+.root #sysview      .section-subtitle { color: rgba(114, 219, 184, 0.72) !important; }
+.root #questions    .section-subtitle { color: rgba(240, 152, 152, 0.72) !important; }
+
+/* ── Curiosity opener line (the italic question above header) ── */
+.curiosity-mark { color: rgba(140, 180, 230, 0.55) !important; }
+.curiosity-text { color: rgba(155, 195, 245, 0.62) !important; }
+
+/* ── Inline highlighted Phrase words — per-section accent color ── */
+.hl-life         { color: #72d490 !important; }
+.hl-evolution    { color: #7ec4f0 !important; }
+.hl-reality      { color: #c49cf5 !important; }
+.hl-religion     { color: #f0c87a !important; }
+.hl-consciousness{ color: #90c8f8 !important; }
+.hl-sysview      { color: #72dbb8 !important; }
+.hl-questions    { color: #f09898 !important; }
+
+/* ── Gold accent line ── */
+.root #life          .gold-line { background: #72d490 !important; opacity: 0.55 !important; }
+.root #evolution     .gold-line { background: #7ec4f0 !important; opacity: 0.55 !important; }
+.root #reality       .gold-line { background: #c49cf5 !important; opacity: 0.55 !important; }
+.root #religion      .gold-line { background: #f0c87a !important; opacity: 0.55 !important; }
+.root #consciousness .gold-line { background: #90c8f8 !important; opacity: 0.55 !important; }
+.root #sysview       .gold-line { background: #72dbb8 !important; opacity: 0.55 !important; }
+.root #questions     .gold-line { background: #f09898 !important; opacity: 0.55 !important; }
+
+/* ── Stat numbers & labels ── */
+.stat-number { color: #9ad4f8 !important; }
+.stat-label  { color: rgba(140, 180, 220, 0.65) !important; }
+
+/* ── Blockquote (S03 reality) ── */
+.cin-quote {
+  color: rgba(210, 230, 255, 0.82) !important;
+  border-left-color: rgba(196, 156, 245, 0.45) !important;
+}
+
+/* ── Consciousness c-lines ── */
+.c-line     { color: rgba(200, 220, 252, 0.80) !important; }
+.c-line-em  { color: #90c8f8 !important; }
+.consciousness-footnote { color: rgba(165, 192, 240, 0.62) !important; }
+
+/* ── Religion god-block ── */
+.god-block-label { color: rgba(240, 200, 122, 0.6) !important; }
+.religion-god-block .word-block p { color: rgba(210, 225, 250, 0.78) !important; }
+
+/* ── Questions ── */
+.q-group-label { color: rgba(240, 152, 152, 0.65) !important; }
+.q-number      { color: rgba(240, 152, 152, 0.45) !important; }
+.q-text        { color: rgba(210, 228, 255, 0.85) !important; }
+.closing-line  { color: rgba(195, 218, 255, 0.70) !important; }
+
+/* ── Section index watermark ── */
+.section-index { color: rgba(100, 140, 210, 0.14) !important; }
+
+/* ── Diagram text ── */
+.pred-stack-label  { color: rgba(140, 175, 220, 0.55) !important; }
+.pred-layer-name   { color: rgba(210, 228, 255, 0.88) !important; }
+.pred-layer-note   { color: rgba(140, 175, 220, 0.62) !important; }
+.belief-map-title  { color: rgba(240, 200, 122, 0.72) !important; }
+.belief-t-cell     { color: rgba(140, 175, 220, 0.65) !important; }
+.belief-q-cell     { color: rgba(200, 222, 252, 0.80) !important; }
+.belief-a-cell     { color: rgba(170, 200, 240, 0.75) !important; }
+.sysview-term      { color: rgba(210, 228, 255, 0.90) !important; }
+.sysview-sub       { color: rgba(140, 175, 220, 0.60) !important; }
+.flow-node-label   { color: rgba(205, 222, 250, 0.88) !important; }
+.flow-node-sub     { color: rgba(135, 170, 215, 0.62) !important; }
+
+/* ── Page epigram ── */
+.page-epigram-text  { color: rgba(190, 215, 248, 0.72) !important; }
+.page-signature     { color: rgba(170, 205, 248, 0.75) !important; }
+.page-signature-sub { color: rgba(140, 175, 220, 0.55) !important; }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   HERO PORTRAIT — atmospheric, dissolves into background
+════════════════════════════════════════════════════════════════════ */
+.hero-portrait-wrap {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  width: 52% !important;
+  height: 100% !important;
+  flex: none !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  overflow: hidden !important;
+}
+
+.hero-portrait-wrap img {
+  object-position: center 15% !important;
+}
+
+.hero-portrait-vignette {
+  position: absolute !important;
+  inset: 0 !important;
+  background:
+    linear-gradient(to right,  #070f1e 0%, #070f1e18 38%, transparent 65%),
+    linear-gradient(to bottom, #070f1e 0%, transparent 18%, transparent 72%, #070f1e 100%),
+    linear-gradient(to left,   #070f1e 0%, transparent 30%) !important;
+  pointer-events: none !important;
+}
+
+.cin-hero-inner {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.cin-hero-text {
+  position: relative !important;
+  z-index: 2 !important;
+  max-width: 600px !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   HERO ANNOTATIONS — floating margin notes over portrait
+════════════════════════════════════════════════════════════════════ */
+.hero-annotations {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.hero-note {
+  position: absolute;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  opacity: 0;
+  animation: noteFloat 0.7s ease forwards;
+}
+
+.hero-note-mark {
+  font-family: "Georgia", serif;
+  font-size: 11px;
+  color: rgba(120, 175, 230, 0.55);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.hero-note-text {
+  font-family: "Georgia", serif;
+  font-size: 11px;
+  font-style: italic;
+  color: rgba(170, 205, 248, 0.48);
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Individual note positions — scattered naturally over portrait */
+.hero-note-1 { top: 14%;  right: 28%; animation-delay: 0.8s;  }
+.hero-note-2 { top: 28%;  right: 8%;  animation-delay: 1.2s;  transform: rotate(-1.5deg); }
+.hero-note-3 { top: 52%;  right: 18%; animation-delay: 1.6s;  transform: rotate(1deg);   }
+.hero-note-4 { top: 66%;  right: 32%; animation-delay: 2.0s;  transform: rotate(-0.8deg);}
+.hero-note-5 { top: 38%;  right: 6%;  animation-delay: 2.4s;  transform: rotate(1.2deg); }
+.hero-note-6 { top: 78%;  right: 22%; animation-delay: 2.8s;  transform: rotate(-1deg);  }
+
+/* Faint connecting thread lines between some notes */
+.hero-note-1::after,
+.hero-note-3::after {
+  content: '';
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  width: 14px;
+  height: 1px;
+  background: rgba(100, 155, 210, 0.22);
+}
+
+@keyframes noteFloat {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Preserve rotation on notes that have it */
+.hero-note-2 { animation-name: noteFloat2; }
+.hero-note-3 { animation-name: noteFloat3; }
+.hero-note-4 { animation-name: noteFloat4; }
+.hero-note-5 { animation-name: noteFloat5; }
+.hero-note-6 { animation-name: noteFloat6; }
+
+@keyframes noteFloat2 {
+  from { opacity: 0; transform: translateY(8px) rotate(-1.5deg); }
+  to   { opacity: 1; transform: translateY(0)   rotate(-1.5deg); }
+}
+@keyframes noteFloat3 {
+  from { opacity: 0; transform: translateY(8px) rotate(1deg); }
+  to   { opacity: 1; transform: translateY(0)   rotate(1deg); }
+}
+@keyframes noteFloat4 {
+  from { opacity: 0; transform: translateY(8px) rotate(-0.8deg); }
+  to   { opacity: 1; transform: translateY(0)   rotate(-0.8deg); }
+}
+@keyframes noteFloat5 {
+  from { opacity: 0; transform: translateY(8px) rotate(1.2deg); }
+  to   { opacity: 1; transform: translateY(0)   rotate(1.2deg); }
+}
+@keyframes noteFloat6 {
+  from { opacity: 0; transform: translateY(8px) rotate(-1deg); }
+  to   { opacity: 1; transform: translateY(0)   rotate(-1deg); }
+}
+
+/* Very faint bracket/underline accent on some notes */
+.hero-note-2 .hero-note-text,
+.hero-note-5 .hero-note-text {
+  border-bottom: 1px solid rgba(100, 155, 210, 0.18);
+  padding-bottom: 1px;
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   HERO ANNOTATIONS FIX — outside overflow:hidden, fill-mode fixed
+════════════════════════════════════════════════════════════════════ */
+.hero-annotations {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  width: 52% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  z-index: 4 !important;
+  overflow: visible !important;
+}
+
+.hero-note {
+  position: absolute !important;
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 6px !important;
+  opacity: 0 !important;
+  animation-duration: 0.8s !important;
+  animation-timing-function: ease !important;
+  animation-fill-mode: forwards !important;
+}
+
+.hero-note-1 { top: 12%;  left: 10%; animation-name: noteFloat  !important; animation-delay: 1.0s !important; }
+.hero-note-2 { top: 27%;  left: 38%; animation-name: noteFloat2 !important; animation-delay: 1.5s !important; }
+.hero-note-3 { top: 45%;  left: 8%;  animation-name: noteFloat3 !important; animation-delay: 2.0s !important; }
+.hero-note-4 { top: 60%;  left: 42%; animation-name: noteFloat4 !important; animation-delay: 2.4s !important; }
+.hero-note-5 { top: 35%;  left: 22%; animation-name: noteFloat5 !important; animation-delay: 2.8s !important; }
+.hero-note-6 { top: 76%;  left: 14%; animation-name: noteFloat6 !important; animation-delay: 3.2s !important; }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   HERO REDESIGN — split layout, personal + philosophical
+════════════════════════════════════════════════════════════════════ */
+
+/* Outer split container */
+.cin-hero-split {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 64px;
+  min-height: 80vh;
+  position: relative;
+}
+
+/* ── LEFT: text side ── */
+.hero-text-side {
+  flex: 0 0 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 22px;
+  padding-right: 64px;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(126, 196, 240, 0.60);
+  font-family: sans-serif;
+}
+
+.hero-title {
+  font-family: "Georgia", serif !important;
+  font-size: clamp(42px, 5.5vw, 72px) !important;
+  font-weight: 300 !important;
+  line-height: 1.06 !important;
+  letter-spacing: -0.02em !important;
+  color: #eef2ff !important;
+  margin: 0 !important;
+}
+
+.hero-rule {
+  width: 48px;
+  height: 1px;
+  background: linear-gradient(to right, rgba(126,196,240,0.7), transparent);
+}
+
+.hero-role {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: rgba(170, 205, 248, 0.72);
+  font-family: sans-serif;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.hero-intro {
+  font-size: clamp(14px, 1.4vw, 16px);
+  line-height: 1.80;
+  color: rgba(200, 220, 252, 0.78);
+  font-family: sans-serif;
+  margin: 0;
+  max-width: 460px;
+}
+
+.hero-quote {
+  font-family: "Georgia", serif;
+  font-size: clamp(13px, 1.3vw, 15px);
+  font-style: italic;
+  color: rgba(190, 215, 255, 0.60);
+  border-left: 2px solid rgba(126, 196, 240, 0.35);
+  padding-left: 18px;
+  margin: 4px 0 0;
+  line-height: 1.65;
+}
+
+.hero-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.hero-tag {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(126, 196, 240, 0.45);
+  border: 1px solid rgba(126, 196, 240, 0.18);
+  border-radius: 2px;
+  padding: 4px 10px;
+  font-family: sans-serif;
+}
+
+/* ── RIGHT: portrait side ── */
+.hero-portrait-side {
+  flex: 0 0 50%;
+  position: relative;
+  overflow: visible;
+}
+
+.hero-portrait-frame {
+  position: absolute;
+  inset: -60px -64px -60px 0;
+  overflow: hidden;
+}
+
+.hero-portrait-frame img {
+  object-position: center 12% !important;
+}
+
+/* Blend edges — strong left fade into text, soft top/bottom/right */
+.hero-portrait-blend {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, #070f1e 0%, rgba(7,15,30,0.85) 22%, rgba(7,15,30,0.30) 55%, rgba(7,15,30,0.10) 100%),
+    linear-gradient(to bottom, #070f1e 0%, transparent 16%, transparent 78%, #070f1e 100%);
+  pointer-events: none;
+}
+
+/* ── Floating thought notes over portrait ── */
+.hero-float-notes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.hfn {
+  position: absolute;
+  font-family: "Georgia", serif;
+  font-style: italic;
+  font-size: 11px;
+  color: rgba(160, 200, 248, 0.38);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  opacity: 0;
+  animation: hfnIn 0.9s ease forwards;
+  animation-fill-mode: forwards;
+}
+
+.hfn-1 { top: 18%; left: 12%; animation-delay: 1.4s; transform: rotate(-1deg); }
+.hfn-2 { top: 36%; left: 28%; animation-delay: 2.0s; transform: rotate(0.8deg); }
+.hfn-3 { top: 56%; left: 10%; animation-delay: 2.6s; transform: rotate(-0.6deg); }
+.hfn-4 { top: 72%; left: 22%; animation-delay: 3.2s; transform: rotate(1deg); }
+
+@keyframes hfnIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Keep rotation on notes that have it */
+.hfn-1 { animation-name: hfnIn1; }
+.hfn-2 { animation-name: hfnIn2; }
+.hfn-3 { animation-name: hfnIn3; }
+.hfn-4 { animation-name: hfnIn4; }
+
+@keyframes hfnIn1 { from { opacity:0; transform:translateY(6px) rotate(-1deg);   } to { opacity:1; transform:translateY(0) rotate(-1deg);   } }
+@keyframes hfnIn2 { from { opacity:0; transform:translateY(6px) rotate(0.8deg);  } to { opacity:1; transform:translateY(0) rotate(0.8deg);  } }
+@keyframes hfnIn3 { from { opacity:0; transform:translateY(6px) rotate(-0.6deg); } to { opacity:1; transform:translateY(0) rotate(-0.6deg); } }
+@keyframes hfnIn4 { from { opacity:0; transform:translateY(6px) rotate(1deg);    } to { opacity:1; transform:translateY(0) rotate(1deg);    } }
+
+/* Mobile */
+@media (max-width: 900px) {
+  .cin-hero-split {
+    flex-direction: column;
+    padding: 0 24px;
+    min-height: auto;
+    gap: 0;
+  }
+  .hero-text-side {
+    flex: none;
+    padding-right: 0;
+    padding-top: 80px;
+    padding-bottom: 40px;
+    gap: 16px;
+  }
+  .hero-portrait-side {
+    flex: none;
+    height: 340px;
+  }
+  .hero-portrait-frame {
+    inset: 0;
+  }
+}
+
+
+/* ── Hero identity line — name + role, natural sentence ── */
+.hero-who {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+.hero-who-name {
+  font-family: "Georgia", serif;
+  font-size: 15px;
+  color: rgba(220, 235, 255, 0.92);
+  letter-spacing: 0.01em;
+}
+.hero-who-sep {
+  color: rgba(126, 196, 240, 0.40);
+  font-size: 13px;
+}
+.hero-who-role {
+  font-size: 13px;
+  color: rgba(160, 195, 240, 0.62);
+  font-style: italic;
+  font-family: "Georgia", serif;
+  line-height: 1.5;
+}

@@ -11,7 +11,10 @@
   "dependencies": {
     "@react-pdf/render": "^4.3.2",
     "@react-pdf/renderer": "^4.3.2",
+    "@supabase/ssr": "^0.9.0",
+    "@supabase/supabase-js": "^2.99.3",
     "@types/three": "^0.183.1",
+    "gsap": "^3.14.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.0.0",
     "next": "16.1.2",

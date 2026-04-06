@@ -13,7 +13,7 @@
  * WHAT CHANGED FROM THE PREVIOUS VERSION
  * ─────────────────────────────────────────────────────────
  * The previous version assumed the listener always faces
- * directly toward the front wall — negative Z direction.
+ * directly toward the front wall — negative Y direction.
  * That is the common case, but it is a hardcoded assumption
  * that breaks the moment a listener is in an angled seat,
  * a side row, or a non-rectangular room configuration.
@@ -24,7 +24,7 @@
  * relative to that vector, not to a hardcoded axis.
  *
  * For a listener facing the front wall (the default),
- * forwardVector = { x: 0, z: -1 } and the results are
+ * forwardVector = { x: 0, y: -1 } and the results are
  * identical to the previous version. The upgrade is fully
  * backward-compatible for the default orientation.
  *
@@ -32,15 +32,15 @@
  * WHAT IS VECTOR ROTATION? — EXPLAINED SIMPLY
  * ─────────────────────────────────────────────────────────
  * In the previous version, azimuth angles were split into
- * X and Z offsets using sin and cos directly against the
+ * X and Y offsets using sin and cos directly against the
  * world axes:
  *
  *   Δx = horizontalReach × sin(azimuth)   ← always world-X
- *   Δz = horizontalReach × cos(azimuth)   ← always world-Z
+ *   Δy = horizontalReach × cos(azimuth)   ← always world-Y
  *
  * This only works when the listener faces exactly along the
- * world Z axis. "Right" always meant +X and "forward" always
- * meant −Z. Those are world-axis assumptions, not listener
+ * world Y axis. "Right" always meant +X and "forward" always
+ * meant −Y. Those are world-axis assumptions, not listener
  * orientation facts.
  *
  * With an arbitrary forwardVector, "forward" and "right" in
@@ -52,7 +52,7 @@
  *   You are standing in a room facing the screen.
  *   "One step to your right" moves you in +X (world right).
  *   Now rotate 90° so you face the right wall.
- *   "One step to your right" now moves you in −Z (world forward).
+ *   "One step to your right" now moves you in +Y (toward back wall).
  *   The step size and angle haven't changed. Only the frame
  *   of reference — what "right" points at in world space —
  *   has changed.
@@ -66,16 +66,16 @@
  * THE FORWARD VECTOR
  * ─────────────────────────────────────────────────────────
  * The Listener's forwardVector is a normalized unit vector
- * in the XZ plane representing the direction they face.
+ * in the XY plane representing the direction they face.
  *
  * Default (listener faces the screen):
- *   forward = { x: 0, z: -1 }
+ *   forward = { x: 0, y: -1 }
  *
  * Listener rotated 45° to the right (angled seat):
- *   forward = { x: 0.7071, z: -0.7071 }
+ *   forward = { x: 0.7071, y: -0.7071 }
  *
  * Listener facing the right wall (90° rotation):
- *   forward = { x: 1, z: 0 }
+ *   forward = { x: 1, y: 0 }
  *
  * The forward vector is always normalized (magnitude = 1)
  * because listener.ts enforces normalization at construction.
@@ -85,35 +85,35 @@
  * DERIVING THE RIGHT VECTOR
  * ─────────────────────────────────────────────────────────
  * Given a forward vector, the right vector is a 90°
- * clockwise rotation of it in the horizontal (XZ) plane.
+ * clockwise rotation of it in the horizontal (XY) plane.
  *
  * "Clockwise" here means: if you stand at the origin and
- * look down the Y axis toward the floor, a clockwise turn
+ * look down the Z axis toward the floor, a clockwise turn
  * of the forward arrow gives you the right arrow.
  *
- * The formula for a 90° clockwise rotation in XZ is:
+ * The formula for a 90° clockwise rotation in XY is:
  *
- *   right = { x: -forward.z, z: forward.x }
+ *   right = { x: -forward.y, y: forward.x }
  *
  * Intuition:
- *   Start with forward = { x: 0, z: -1 } (facing screen).
- *   right = { x: -(-1), z: 0 } = { x: 1, z: 0 }
+ *   Start with forward = { x: 0, y: -1 } (facing screen).
+ *   right = { x: -(-1), y: 0 } = { x: 1, y: 0 }
  *   ✓ Positive X is indeed to the listener's right.
  *
- *   Rotate listener 90° rightward: forward = { x: 1, z: 0 }.
- *   right = { x: -(0), z: 1 } = { x: 0, z: 1 }
- *   ✓ If you face right, your right is toward the back wall (+Z). Correct.
+ *   Rotate listener 90° rightward: forward = { x: 1, y: 0 }.
+ *   right = { x: -(0), y: 1 } = { x: 0, y: 1 }
+ *   ✓ If you face right, your right is toward the back wall (+Y). Correct.
  *
- *   Rotate listener 45°: forward = { x: 0.7071, z: -0.7071 }.
- *   right = { x: 0.7071, z: 0.7071 }
+ *   Rotate listener 45°: forward = { x: 0.7071, y: -0.7071 }.
+ *   right = { x: 0.7071, y: 0.7071 }
  *   ✓ Points diagonally right and forward — correct for a 45° angled seat.
  *
- * Why NOT { x: forward.z, z: -forward.x }?
+ * Why NOT { x: forward.y, y: -forward.x }?
  * That formula produces a 90° COUNTER-clockwise rotation,
  * which is the listener's LEFT vector. Using it would make
  * positive azimuth go left and negative azimuth go right —
  * the opposite of the established engine convention.
- * The correct clockwise formula is { x: -forward.z, z: forward.x }.
+ * The correct clockwise formula is { x: -forward.y, y: forward.x }.
  *
  * ─────────────────────────────────────────────────────────
  * HOW OFFSETS ARE COMPUTED IN TWO STEPS
@@ -135,19 +135,19 @@
  * right vectors:
  *
  *   Δx = forward_amount × forward.x + right_amount × right.x
- *   Δz = forward_amount × forward.z + right_amount × right.z
+ *   Δy = forward_amount × forward.y + right_amount × right.y
  *
  * This turns the listener-relative amounts into world-space
- * offsets along the actual X and Z axes of the room.
+ * offsets along the actual X and Y axes of the room.
  *
- * For the default orientation (forward = { x:0, z:-1 },
- * right = { x:1, z:0 }):
+ * For the default orientation (forward = { x:0, y:-1 },
+ * right = { x:1, y:0 }):
  *   Δx = forward_amount × 0  + right_amount × 1 = right_amount
- *   Δz = forward_amount × −1 + right_amount × 0 = −forward_amount
+ *   Δy = forward_amount × −1 + right_amount × 0 = −forward_amount
  *
  * Which simplifies to exactly what the previous version did:
  *   Δx = horizontalReach × sin(azimuth)
- *   Δz = −horizontalReach × cos(azimuth)
+ *   Δy = −horizontalReach × cos(azimuth)
  *
  * The upgrade is a strict generalization. Default behavior
  * is preserved. Non-default orientations now work correctly.
@@ -202,8 +202,8 @@ function degreesToRadians(degrees: number): number {
  *
  * Engine coordinate system:
  *   X axis → left to right    (positive X = room's right side)
- *   Y axis → floor to ceiling (positive Y = upward)
- *   Z axis → front to back    (positive Z = toward back wall)
+ *   Y axis → front to back    (positive Y = toward back wall)
+ *   Z axis → floor to ceiling (positive Z = upward)
  *   Origin  → front-left floor corner of the room
  *
  * Angle conventions (all relative to listener's facing direction):
@@ -234,43 +234,43 @@ function degreesToRadians(degrees: number): number {
  * ─────────────────────────────────────────────────────────
  * WORKED EXAMPLES
  * ─────────────────────────────────────────────────────────
- * Listener at { x: 3, y: 1.2, z: 5 }, facing default { x:0, z:-1 }:
+ * Listener at { x: 3, y: 5, z: 1.2 }, facing default { x:0, y:-1 }:
  * distance = 2m
  *
- *   forward = { x: 0, z: -1 }
- *   right   = { x: 1, z:  0 }    ← -(-1), 0
+ *   forward = { x: 0, y: -1 }
+ *   right   = { x: 1, y:  0 }    ← -(-1), 0
  *
  *   Center speaker (azimuth: 0°, elevation: 0°):
  *     horizontalReach  = 2 × cos(0°) = 2
  *     forward_amount   = 2 × cos(0°) = 2
  *     right_amount     = 2 × sin(0°) = 0
  *     Δx = 2×0 + 0×1 = 0
- *     Δz = 2×(−1) + 0×0 = −2
- *     Δy = 2 × sin(0°) = 0
- *     → { x: 3, y: 1.2, z: 3 }   (2m in front of listener)
+ *     Δy = 2×(−1) + 0×0 = −2
+ *     Δz = 2 × sin(0°) = 0
+ *     → { x: 3, y: 3, z: 1.2 }   (2m in front of listener)
  *
  *   Right speaker (azimuth: 30°, elevation: 0°):
  *     horizontalReach  = 2
  *     forward_amount   = 2 × cos(30°) ≈ 1.732
  *     right_amount     = 2 × sin(30°) = 1
  *     Δx = 1.732×0 + 1×1 = 1
- *     Δz = 1.732×(−1) + 1×0 ≈ −1.732
- *     → { x: 4, y: 1.2, z: ≈3.268 }
+ *     Δy = 1.732×(−1) + 1×0 ≈ −1.732
+ *     → { x: 4, y: ≈3.268, z: 1.2 }
  *
  *   Left surround (azimuth: −110°, elevation: 0°):
  *     forward_amount   = 2 × cos(−110°) ≈ −0.684
  *     right_amount     = 2 × sin(−110°) ≈ −1.879
  *     Δx = −0.684×0 + (−1.879)×1 ≈ −1.879
- *     Δz = −0.684×(−1) + (−1.879)×0 ≈ 0.684
- *     → { x: ≈1.121, y: 1.2, z: ≈5.684 }
+ *     Δy = −0.684×(−1) + (−1.879)×0 ≈ 0.684
+ *     → { x: ≈1.121, y: ≈5.684, z: 1.2 }
  *
- * Listener rotated 90° right: forward = { x:1, z:0 }, right = { x:0, z:1 }
+ * Listener rotated 90° right: forward = { x:1, y:0 }, right = { x:0, y:1 }
  *
  *   Center speaker (azimuth: 0°, elevation: 0°):
  *     forward_amount = 2, right_amount = 0
  *     Δx = 2×1 + 0×0 = 2
- *     Δz = 2×0 + 0×1 = 0
- *     → { x: 5, y: 1.2, z: 5 }   ("forward" now = +X direction)
+ *     Δy = 2×0 + 0×1 = 0
+ *     → { x: 5, y: 5, z: 1.2 }   ("forward" now = +X direction)
  */
 export function computeSpeakerPosition(
   listener: Listener,
@@ -284,16 +284,16 @@ export function computeSpeakerPosition(
   // ── Derive the right vector from the listener's forward vector ──
   //
   // The right vector is a 90° clockwise rotation of the forward
-  // vector in the XZ plane (viewed from above with Y pointing up).
+  // vector in the XY plane (viewed from above with Z pointing up).
   //
-  // Clockwise rotation formula: { x: -forward.z, z: forward.x }
+  // Clockwise rotation formula: { x: -forward.y, y: forward.x }
   //
-  // Verify with default forward { x: 0, z: -1 }:
-  //   right = { x: -(-1), z: 0 } = { x: 1, z: 0 } ✓ (world right)
+  // Verify with default forward { x: 0, y: -1 }:
+  //   right = { x: -(-1), y: 0 } = { x: 1, y: 0 } ✓ (world right)
   const forward = listener.forwardVector
   const right = {
-    x: -forward.z,
-    z:  forward.x,
+    x: -forward.y,
+    y:  forward.x,
   }
 
   // ── Horizontal reach ──
@@ -322,18 +322,18 @@ export function computeSpeakerPosition(
   //
   // This is the vector rotation step: it translates
   // "X units forward + Y units right in listener space"
-  // into the correct Δx and Δz in world space for any
+  // into the correct Δx and Δy in world space for any
   // listener orientation.
   const dx = forwardAmount * forward.x + rightAmount * right.x
-  const dz = forwardAmount * forward.z + rightAmount * right.z
+  const dy = forwardAmount * forward.y + rightAmount * right.y
 
   // ── Vertical offset ──
   //
-  // Elevation is always in world Y — the engine's Y axis is
+  // Elevation is always in world Z — the engine's Z axis is
   // vertical and does not rotate with the listener's heading.
   // A speaker 45° above ear level is 45° above in world space
   // regardless of which way the listener faces horizontally.
-  const dy = distance * Math.sin(elevation)
+  const dz = distance * Math.sin(elevation)
 
   return {
     x: listener.position.x + dx,

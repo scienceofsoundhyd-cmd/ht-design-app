@@ -24,8 +24,8 @@ export function buildConsultationPayload(params: {
   notes: client.notes ?? "",
 
   rating: result.acousticScore,
-  flatnessDb: result.worstCluster?.severityScore ?? 0,
-  uniformityDb: result.modalVisualization.densityScore,
+  clusterSeverityScore: result.worstCluster?.severityScore ?? 0,
+  rt60Seconds: result.rt60Seconds,
 
   roomWidth: room.width,
   roomHeight: room.height,

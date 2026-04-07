@@ -32,10 +32,16 @@ export default function GlobalNav() {
   const [search, setSearch] = useState("")
   const [searchOpen, setSearchOpen] = useState(false)
   const [userPanelOpen, setUserPanelOpen] = useState(false)
+  const [designModalOpen, setDesignModalOpen] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const userPanelRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const open = openForPath === pathname
+
+  const handleDesignNow = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (user) { router.push("/engine") } else { setDesignModalOpen(true) }
+  }
   const { user, signOut } = useAuth()
 
   // Inline auth form state
@@ -471,7 +477,7 @@ export default function GlobalNav() {
             transition:"background 0.35s ease" }}/>
 
           {/* Design Now */}
-          <Link href="/engine"
+          <button onClick={handleDesignNow}
             className="flex items-center justify-center gap-1.5 rounded-lg text-xs font-medium"
             style={{
               width: 130, height: 30,
@@ -482,6 +488,7 @@ export default function GlobalNav() {
               fontSize: 13,
               backdropFilter: "blur(8px)",
               WebkitBackdropFilter: "blur(8px)",
+              cursor: "pointer",
             }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
               stroke="rgba(29,34,40,0.55)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
@@ -501,7 +508,7 @@ export default function GlobalNav() {
               <line x1="20" y1="21" x2="20" y2="22.8"/>
             </svg>
             Design Now →
-          </Link>
+          </button>
             </div>
           </div>
         </div>
@@ -574,10 +581,10 @@ export default function GlobalNav() {
             })}
 
             <div className="flex gap-3 px-6 py-4">
-              <Link href="/engine" className="flex-1 text-center py-2.5 rounded-lg text-sm font-semibold"
-                style={{ background: toolBg, color:"#fff" }}>
+              <button onClick={handleDesignNow} className="flex-1 text-center py-2.5 rounded-lg text-sm font-semibold"
+                style={{ background: toolBg, color:"#fff", border:"none", cursor:"pointer" }}>
                 Design Now →
-              </Link>
+              </button>
               <Link href="/login" className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border"
                 style={{ borderColor: drawerLoginBorder, color: drawerText }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -603,6 +610,101 @@ export default function GlobalNav() {
               </Link>
             </div>
           </nav>
+        </div>
+      )}
+
+      {/* ── Design Now auth modal ── */}
+      {designModalOpen && (
+        <div
+          onClick={() => setDesignModalOpen(false)}
+          style={{
+            position:"fixed", inset:0, zIndex:9999,
+            background:"rgba(15,18,24,0.55)",
+            backdropFilter:"blur(6px)",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            padding:"24px",
+          }}>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width:"100%", maxWidth:400, borderRadius:20,
+              background:"rgba(240,242,246,0.97)",
+              border:"1px solid rgba(29,34,40,0.10)",
+              boxShadow:"0 24px 60px rgba(0,0,0,0.22), 0 0 0 0.5px rgba(255,255,255,0.7) inset",
+              overflow:"hidden",
+            }}>
+            {/* Header */}
+            <div style={{
+              padding:"28px 28px 20px",
+              borderBottom:"1px solid rgba(29,34,40,0.08)",
+              display:"flex", alignItems:"flex-start", gap:16,
+            }}>
+              <div style={{
+                width:48, height:48, borderRadius:12, flexShrink:0,
+                background:"linear-gradient(135deg,rgba(37,99,235,0.12),rgba(37,99,235,0.06))",
+                border:"1px solid rgba(37,99,235,0.18)",
+                display:"flex", alignItems:"center", justifyContent:"center",
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                  stroke="rgba(37,99,235,0.8)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="5" r="1.4"/>
+                  <line x1="10.8" y1="6.2" x2="7" y2="20"/>
+                  <line x1="13.2" y1="6.2" x2="17" y2="20"/>
+                  <line x1="8.5"  y1="13" x2="15.5" y2="13"/>
+                  <rect x="2" y="21" width="20" height="2.5" rx="0.5"/>
+                </svg>
+              </div>
+              <div style={{ flex:1 }}>
+                <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em",
+                  color:"rgba(29,34,40,0.42)", textTransform:"uppercase", marginBottom:5 }}>
+                  Design Tool
+                </p>
+                <h2 style={{ fontSize:19, fontWeight:700, color:"#1d2228",
+                  margin:"0 0 6px", lineHeight:1.2 }}>
+                  Sign in to use the tool
+                </h2>
+                <p style={{ fontSize:13, color:"rgba(29,34,40,0.56)", margin:0, lineHeight:1.5 }}>
+                  Create a free account to design your home theater, save projects, and get acoustic reports.
+                </p>
+              </div>
+              <button onClick={() => setDesignModalOpen(false)}
+                style={{ background:"none", border:"none", cursor:"pointer",
+                  color:"rgba(29,34,40,0.35)", fontSize:20, lineHeight:1,
+                  padding:"0 0 0 8px", flexShrink:0 }}>
+                ×
+              </button>
+            </div>
+
+            {/* Features list */}
+            <div style={{ padding:"18px 28px", borderBottom:"1px solid rgba(29,34,40,0.07)" }}>
+              {[
+                { icon:"◈", text:"Design your room in 3D with real dimensions" },
+                { icon:"◉", text:"Acoustic analysis — RT60, room modes, treatment" },
+                { icon:"◎", text:"Save and revisit your projects anytime" },
+              ].map(({ icon, text }) => (
+                <div key={text} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                  <span style={{ fontSize:13, color:"rgba(37,99,235,0.7)", flexShrink:0 }}>{icon}</span>
+                  <span style={{ fontSize:13, color:"rgba(29,34,40,0.65)" }}>{text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div style={{ padding:"20px 28px 24px", display:"flex", flexDirection:"column", gap:10 }}>
+              <button
+                onClick={() => { setDesignModalOpen(false); setUserPanelOpen(true) }}
+                style={{ width:"100%", padding:"11px 0", borderRadius:9, fontSize:14,
+                  fontWeight:600, color:"#fff", border:"none", cursor:"pointer",
+                  background:"linear-gradient(135deg,#2563EB,#1d4ed8)",
+                  boxShadow:"0 4px 14px rgba(37,99,235,0.30)" }}>
+                Sign In / Create Account
+              </button>
+              <p style={{ textAlign:"center", fontSize:11,
+                color:"rgba(29,34,40,0.38)", margin:0 }}>
+                Free to use · No credit card required
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { useSiteReveal } from "@/app/components/useSiteReveal";
+import { useSiteReveal } from "@/hooks/useSiteReveal";
 
 const PAGE_STYLE = { "--page-accent": "#1f9a74" } as CSSProperties;
 

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Sans_Condensed, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/app/components/AuthProvider";
-import GlobalNav from "@/app/components/GlobalNav";
-import BackgroundController from "@/app/components/BackgroundController";
+import { AuthProvider } from "@/components/layout/AuthProvider";
+import GlobalNav from "@/components/layout/GlobalNav";
+import BackgroundController from "@/components/shared/BackgroundController";
 
 const siteSans = IBM_Plex_Sans({
   variable: "--font-site-sans",

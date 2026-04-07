@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useAuth } from "@/app/components/AuthProvider"
+import { useAuth } from "@/components/layout/AuthProvider"
 import { supabase } from "@/lib/supabase"
 
 const NAV_LINKS = [

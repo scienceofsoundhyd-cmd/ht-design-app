@@ -10,7 +10,7 @@ import { analyzeRoomAcoustics } from "@/lib/engine/acoustics/acousticOrchestrato
 import { computePanelLayout } from "@/lib/engine/acoustics/panelEngine"
 import { feetInchesToMeters, metersToFeetInches } from "@/lib/engine/core/units"
 import { validateRoomDimensions } from "@/lib/engine/validation/roomConstraints"
-import TheatreView3D from "@/app/components/TheatreView3D"
+import TheatreView3D from "@/components/engine/TheatreView3D"
 
 const WALL_MATERIAL_COEFF: Record<string, { wall: number; ceiling: number; floor: number }> = {
   drywall:  { wall: 0.05, ceiling: 0.05, floor: 0.02  },

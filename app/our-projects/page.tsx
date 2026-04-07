@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSiteReveal } from "@/app/components/useSiteReveal";
+import { useSiteReveal } from "@/hooks/useSiteReveal";
 
 const PROJECTS = [
   {

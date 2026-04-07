@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { runPublicSimulation, PublicSimulationResult } from "../../lib/engine/api/publicSimulation";
-import { AcousticResponseChart } from "../components/AcousticResponseChart";
+import { AcousticResponseChart } from "@/components/engine/AcousticResponseChart";
 import { downloadAcousticReport } from "@/lib/report/downloadpdf";
 
 const BG = "#08090B";

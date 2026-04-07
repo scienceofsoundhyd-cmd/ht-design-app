@@ -2,6 +2,8 @@
 
 import { createRoom } from "@/lib/engine/core"
 import React, { useState, useRef, useEffect, useMemo } from "react"
+import { useAuth } from "@/components/layout/AuthProvider"
+import { supabase } from "@/lib/supabase"
 import { buildScene } from "@/lib/engine/core/sceneBuilder"
 import { ViewingStandard } from "@/lib/engine/core/screen"
 import { SceneObject } from "@/lib/engine/core/types"
@@ -510,7 +512,152 @@ function AccountMenu() {
   )
 }
 
+function AuthGate() {
+  const [tab, setTab] = useState<"in"|"up">("in")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const reset = () => { setEmail(""); setPassword(""); setName(""); setError(""); setSuccess("") }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); setLoading(true); setError("")
+    if (tab === "in") {
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password })
+      if (err) { setError("Invalid email or password."); setLoading(false) }
+      // AuthProvider will detect the session change and re-render the engine
+    } else {
+      const { error: err } = await supabase.auth.signUp({
+        email, password, options: { data: { full_name: name.trim() } }
+      })
+      if (err) { setError(err.message); setLoading(false); return }
+      setLoading(false)
+      setSuccess("Check your email for a verification link.")
+    }
+  }
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(145deg,#eef0f3 0%,#d7dade 48%,#e5e7eb 100%)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "80px 24px 40px",
+    }}>
+      <div style={{ width: "100%", maxWidth: 420 }}>
+
+        {/* Icon + heading */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 16, margin: "0 auto 18px",
+            background: "linear-gradient(135deg,rgba(37,99,235,0.12),rgba(37,99,235,0.06))",
+            border: "1px solid rgba(37,99,235,0.18)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+              stroke="rgba(37,99,235,0.75)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="5" r="1.4"/>
+              <line x1="10.8" y1="6.2" x2="7" y2="20"/>
+              <line x1="13.2" y1="6.2" x2="17" y2="20"/>
+              <line x1="8.5"  y1="13" x2="15.5" y2="13"/>
+              <rect x="2" y="21" width="20" height="2.5" rx="0.5"/>
+            </svg>
+          </div>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em",
+            color: "rgba(29,34,40,0.42)", textTransform: "uppercase", marginBottom: 8 }}>
+            Science of Sound · Design Tool
+          </p>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1d2228",
+            margin: "0 0 10px", lineHeight: 1.2 }}>
+            Sign in to design your theater
+          </h1>
+          <p style={{ fontSize: 14, color: "rgba(29,34,40,0.55)", margin: 0, lineHeight: 1.6 }}>
+            Create a free account to access the room design engine,
+            save projects, and generate acoustic reports.
+          </p>
+        </div>
+
+        {/* Card */}
+        <div style={{
+          background: "rgba(255,255,255,0.68)", borderRadius: 18,
+          border: "1px solid rgba(29,34,40,0.10)",
+          boxShadow: "0 8px 32px rgba(29,34,40,0.10), 0 0 0 0.5px rgba(255,255,255,0.7) inset",
+          backdropFilter: "blur(20px)", overflow: "hidden",
+        }}>
+          {/* Tabs */}
+          <div style={{ display: "flex", borderBottom: "1px solid rgba(29,34,40,0.08)" }}>
+            {(["in","up"] as const).map(t => (
+              <button key={t} onClick={() => { setTab(t); reset() }}
+                style={{
+                  flex: 1, padding: "14px 0", fontSize: 13, fontWeight: 500,
+                  background: "transparent", border: "none", cursor: "pointer",
+                  color: tab === t ? "#1d2228" : "rgba(29,34,40,0.42)",
+                  borderBottom: tab === t ? "2px solid #2563EB" : "2px solid transparent",
+                  marginBottom: -1, transition: "all 0.15s",
+                }}>
+                {t === "in" ? "Sign In" : "Create Account"}
+              </button>
+            ))}
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} style={{ padding: "24px 24px 28px", display: "flex", flexDirection: "column", gap: 12 }}>
+            {tab === "up" && (
+              <input type="text" required placeholder="Full name" value={name}
+                onChange={e => setName(e.target.value)}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13,
+                  border: "1px solid rgba(29,34,40,0.13)", background: "rgba(255,255,255,0.6)",
+                  color: "#1d2228", outline: "none", boxSizing: "border-box" }}/>
+            )}
+            <input type="email" required placeholder="Email address" value={email}
+              onChange={e => setEmail(e.target.value)}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13,
+                border: "1px solid rgba(29,34,40,0.13)", background: "rgba(255,255,255,0.6)",
+                color: "#1d2228", outline: "none", boxSizing: "border-box" }}/>
+            <input type="password" required placeholder="Password" value={password}
+              onChange={e => setPassword(e.target.value)}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 9, fontSize: 13,
+                border: "1px solid rgba(29,34,40,0.13)", background: "rgba(255,255,255,0.6)",
+                color: "#1d2228", outline: "none", boxSizing: "border-box" }}/>
+
+            {error   && <p style={{ fontSize: 12, color: "#ef4444", margin: 0, textAlign: "center" }}>{error}</p>}
+            {success && <p style={{ fontSize: 12, color: "#16a34a", margin: 0, textAlign: "center" }}>{success}</p>}
+
+            <button type="submit" disabled={loading}
+              style={{ marginTop: 4, width: "100%", padding: "11px 0", borderRadius: 9,
+                fontSize: 14, fontWeight: 600, color: "#fff",
+                background: loading ? "#1d3a6e" : "linear-gradient(135deg,#2563EB,#1d4ed8)",
+                border: "none", cursor: loading ? "not-allowed" : "pointer",
+                boxShadow: "0 4px 14px rgba(37,99,235,0.30)", transition: "opacity 0.15s" }}>
+              {loading ? "Please wait…" : tab === "in" ? "Sign In & Open Tool" : "Create Account"}
+            </button>
+          </form>
+        </div>
+
+        {/* Footer note */}
+        <p style={{ textAlign: "center", fontSize: 12, color: "rgba(29,34,40,0.38)", marginTop: 18 }}>
+          Free to use · No credit card required · Your designs are saved to your account
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function EngineV2() {
+  const { user, loading: authLoading } = useAuth()
+
+  if (authLoading) return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+      background: "linear-gradient(145deg,#eef0f3 0%,#d7dade 48%,#e5e7eb 100%)" }}>
+      <div style={{ width: 36, height: 36, borderRadius: "50%",
+        border: "3px solid rgba(37,99,235,0.2)", borderTop: "3px solid #2563EB",
+        animation: "spin 0.8s linear infinite" }}/>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
+
+  if (!user) return <AuthGate />
 
   // Hard limits (in meters)
   const LIMITS = {
